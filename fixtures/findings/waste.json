@@ -1,0 +1,94 @@
+[
+  {
+    "id": "waste-0001",
+    "type": "orphaned-disk",
+    "tier": "T1",
+    "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg-dev/providers/Microsoft.Compute/disks/disk-orphan-01",
+    "subscriptionId": "00000000-0000-0000-0000-000000000001",
+    "summary": "Unattached Premium_LRS managed disk (128 GiB), no attachment activity in the 90-day window.",
+    "evidence": [
+      {
+        "capability": "inventory.list_resources",
+        "tool": "azure_query_azure_resource_graph",
+        "query": "Resources | where type == 'microsoft.compute/disks' and properties.diskState == 'Unattached'",
+        "timeWindow": "2026-07-01/2026-09-30",
+        "observation": "diskState=Unattached; sku=Premium_LRS; sizeGb=128"
+      }
+    ],
+    "estimatedMonthlySaving": { "amount": 24.58, "currency": "AUD", "basis": "actual" },
+    "confidence": "high",
+    "effort": "low",
+    "iacMatch": { "repo": "infra", "path": "modules/storage/disks.bicep", "status": "found" },
+    "status": "proposed",
+    "prUrl": null
+  },
+  {
+    "id": "waste-0002",
+    "type": "orphaned-public-ip",
+    "tier": "T1",
+    "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg-dev/providers/Microsoft.Network/publicIPAddresses/pip-orphan-01",
+    "subscriptionId": "00000000-0000-0000-0000-000000000001",
+    "summary": "Standard public IP not associated with any resource (no ipConfiguration).",
+    "evidence": [
+      {
+        "capability": "inventory.list_resources",
+        "tool": "azure_query_azure_resource_graph",
+        "query": "Resources | where type == 'microsoft.network/publicipaddresses' and isnull(properties.ipConfiguration)",
+        "timeWindow": "2026-09-01/2026-09-30",
+        "observation": "ipConfiguration=null; sku=Standard"
+      }
+    ],
+    "estimatedMonthlySaving": { "amount": 4.86, "currency": "AUD", "basis": "actual" },
+    "confidence": "high",
+    "effort": "low",
+    "iacMatch": { "repo": null, "path": null, "status": "unmanaged" },
+    "status": "proposed",
+    "prUrl": null
+  },
+  {
+    "id": "waste-0003",
+    "type": "idle-vm",
+    "tier": "T2",
+    "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg-dev/providers/Microsoft.Compute/virtualMachines/vm-idle-01",
+    "subscriptionId": "00000000-0000-0000-0000-000000000001",
+    "summary": "Dev VM Standard_D4s_v5 averaging 2.1% CPU over 14 days; candidate for downsize or shutdown schedule.",
+    "evidence": [
+      {
+        "capability": "metrics.utilization",
+        "tool": "monitor",
+        "query": "metric=Percentage CPU; aggregation=Average; grain=PT1H",
+        "timeWindow": "2026-09-16/2026-09-30",
+        "observation": "avgCpu=2.1%; maxCpu=9.4%; p95Cpu=4.0%"
+      }
+    ],
+    "estimatedMonthlySaving": { "amount": 165.40, "currency": "AUD", "basis": "actual" },
+    "confidence": "medium",
+    "effort": "medium",
+    "iacMatch": { "repo": "infra", "path": "modules/compute/vm-dev.bicep", "status": "found" },
+    "status": "proposed",
+    "prUrl": null
+  },
+  {
+    "id": "waste-0004",
+    "type": "missing-budget",
+    "tier": "T0",
+    "resourceId": "(subscription-scope)",
+    "subscriptionId": "00000000-0000-0000-0000-000000000001",
+    "summary": "No cost budget or alert configured on the subscription; add a monthly budget with alerts.",
+    "evidence": [
+      {
+        "capability": "budget.list",
+        "tool": "arm (CostManagement)",
+        "query": "list budgets at subscription scope",
+        "timeWindow": "2026-10-01/2026-10-13",
+        "observation": "budgetCount=0"
+      }
+    ],
+    "estimatedMonthlySaving": { "amount": 0, "currency": "AUD", "basis": "actual" },
+    "confidence": "high",
+    "effort": "low",
+    "iacMatch": { "repo": "infra", "path": "modules/governance/budget.bicep", "status": "not-found" },
+    "status": "proposed",
+    "prUrl": null
+  }
+]

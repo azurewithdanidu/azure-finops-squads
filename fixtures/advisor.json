@@ -1,0 +1,22 @@
+{
+  "capturedAt": "2026-10-13T00:00:00Z",
+  "subscriptionId": "00000000-0000-0000-0000-000000000001",
+  "recommendations": [
+    {
+      "id": "advisor-cost-001",
+      "category": "Cost",
+      "impact": "Medium",
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg-dev/providers/Microsoft.Compute/virtualMachines/vm-idle-01",
+      "recommendationType": "Right-size or shutdown underutilized virtual machines",
+      "estimatedMonthlySavingAud": 165.40
+    },
+    {
+      "id": "advisor-cost-002",
+      "category": "Cost",
+      "impact": "High",
+      "resourceId": "(subscription-scope)",
+      "recommendationType": "Buy reserved instances / savings plan to save on pay-as-you-go costs",
+      "estimatedMonthlySavingAud": 412.00
+    }
+  ]
+}

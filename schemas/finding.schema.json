@@ -1,0 +1,125 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/finops-squad/schemas/finding.schema.json",
+  "title": "FinOps Squad Finding",
+  "description": "A single cost-optimization finding produced by a finding agent.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "type",
+    "tier",
+    "resourceId",
+    "subscriptionId",
+    "summary",
+    "evidence",
+    "estimatedMonthlySaving",
+    "confidence",
+    "effort",
+    "iacMatch",
+    "status"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z]+-[0-9]{4}$",
+      "description": "Stable finding id, e.g. 'waste-0001'."
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "orphaned-disk",
+        "orphaned-public-ip",
+        "orphaned-nic",
+        "orphaned-snapshot",
+        "idle-vm",
+        "idle-gateway",
+        "stopped-but-billed",
+        "missing-shutdown-schedule",
+        "rightsizing",
+        "storage-tiering",
+        "missing-budget",
+        "tagging-gap",
+        "commitment-opportunity",
+        "hybrid-benefit",
+        "anomaly"
+      ]
+    },
+    "tier": {
+      "type": "string",
+      "enum": ["T0", "T1", "T2", "T3"],
+      "description": "Risk tier. The Fixer refuses missing or T3 tiers."
+    },
+    "resourceId": {
+      "type": "string",
+      "description": "Full Azure resource id, or '(subscription-scope)' for scope-level findings."
+    },
+    "subscriptionId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["capability", "tool", "query", "timeWindow", "observation"],
+        "properties": {
+          "capability": { "type": "string" },
+          "tool": { "type": "string" },
+          "query": { "type": "string" },
+          "timeWindow": { "type": "string" },
+          "observation": { "type": "string" }
+        }
+      }
+    },
+    "estimatedMonthlySaving": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["amount", "currency", "basis"],
+      "properties": {
+        "amount": { "type": "number", "minimum": 0 },
+        "currency": { "type": "string", "minLength": 3, "maxLength": 3 },
+        "basis": {
+          "type": "string",
+          "enum": ["list-price", "actual"],
+          "description": "Never leave blank. 'actual' only with a real EA/MCA/CSP/PAYG rate."
+        }
+      }
+    },
+    "confidence": {
+      "type": "string",
+      "enum": ["low", "medium", "high"]
+    },
+    "effort": {
+      "type": "string",
+      "enum": ["low", "medium", "high"]
+    },
+    "iacMatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status"],
+      "properties": {
+        "repo": { "type": ["string", "null"] },
+        "path": { "type": ["string", "null"] },
+        "status": {
+          "type": "string",
+          "enum": ["found", "not-found", "unmanaged"],
+          "description": "'unmanaged' => Fixer produces a manual change request, not a PR."
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["proposed", "approved", "pr-open", "merged", "verified", "rejected"]
+    },
+    "prUrl": {
+      "type": ["string", "null"]
+    }
+  }
+}

@@ -1,0 +1,32 @@
+# --- FinOps Squad .gitignore ---
+
+# Runtime workspace: run artifacts, findings, reports (reproducible, not committed)
+.finops/
+
+# Local MCP config may contain subscription IDs — never commit it
+.vscode/mcp.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+*.egg-info/
+
+# Node (Azure MCP is run via npx; no node_modules expected, but guard anyway)
+node_modules/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+
+# Other AI tool scratch/workspace folders (not part of this project's content)
+.alta/
+
+# Logs and scratch
+*.log
+tmp/

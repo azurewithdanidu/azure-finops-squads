@@ -1,0 +1,13 @@
+{
+  "id": "bad-9999",
+  "type": "orphaned-disk",
+  "resourceId": "/subscriptions/x/disks/bad",
+  "subscriptionId": "00000000-0000-0000-0000-000000000001",
+  "summary": "Missing tier, empty evidence and blank price basis — must fail validation.",
+  "evidence": [],
+  "estimatedMonthlySaving": { "amount": 10, "currency": "AUD", "basis": "" },
+  "confidence": "high",
+  "effort": "low",
+  "iacMatch": { "status": "found" },
+  "status": "proposed"
+}

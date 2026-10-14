@@ -1,0 +1,10 @@
+{
+  "findingId": "waste-0001",
+  "mergedAt": "2026-10-20",
+  "checkedAt": "2026-11-20",
+  "baselineMonthly": 24.58,
+  "observedMonthly": 0,
+  "realisedSaving": 24.58,
+  "result": "confirmed",
+  "notes": "Disk no longer present in cost data; cost-data lag allowance: 3 days."
+}

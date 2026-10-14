@@ -1,0 +1,36 @@
+{
+  // Copy this file to .vscode/mcp.json and restart MCP servers
+  // (Command Palette: "MCP: List Servers" -> Restart).
+  //
+  // This is Microsoft's own server. Authentication uses your own Azure
+  // sign-in (az login). Minimum roles: Reader, Cost Management Reader,
+  // Monitoring Reader.
+  "servers": {
+    // Microsoft's Azure MCP server (resource access, Monitor metrics, Advisor,
+    // optimization, pricing). Installed on demand via npx; requires Node.js.
+    "azure-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@azure/mcp@latest", "server", "start"]
+    }
+  }
+
+  // NOTE on cost/Resource-Graph querying: an earlier revision of this file
+  // included a second, speculative "azure-resource-manager-mcp" HTTP entry
+  // (endpoint https://mcp.management.azure.com with an x-mcp-toolset header)
+  // for spend/budget/forecast/commitment data. That entry was never verified
+  // and has been removed.
+  //
+  // In practice, when running inside GitHub Copilot in VS Code, an `arm`
+  // command group (query_costs, query_aks_costs, execute_query/generate_query/
+  // validate_query for Resource Graph, get_retail_prices) is already available
+  // to agents with zero extra configuration -- it is provided by this agent
+  // host directly, not by the @azure/mcp npm package above. It has been
+  // live-verified against a real subscription (real spend by service, a
+  // working Resource Graph query, and retail pricing lookups).
+  //
+  // Budgets, cost forecasting, and reservation/savings-plan listing are
+  // still not available from any backend as of this writing. See
+  // docs/mcp-capability-map.md for the full, current picture and docs/
+  // mcp-tool-inventory.md for the complete `arm` command list.
+}

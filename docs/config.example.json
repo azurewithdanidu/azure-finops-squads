@@ -1,0 +1,22 @@
+{
+  "subscriptions": [
+    "00000000-0000-0000-0000-000000000001"
+  ],
+  "timeWindow": {
+    "start": "2026-07-01",
+    "end": "2026-09-30",
+    "grain": "Monthly"
+  },
+  "priceBasis": "actual",
+  "currency": "AUD",
+  "locale": "en-AU",
+  "iac": {
+    "type": "bicep",
+    "repo": "infra",
+    "rootPath": "modules"
+  },
+  "waste": {
+    "orphanMinAgeDays": 14,
+    "idleObservationDays": 14
+  }
+}

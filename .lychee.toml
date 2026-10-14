@@ -1,0 +1,18 @@
+# lychee link-checker config for finops-squad
+# Relative Markdown links are resolved from each file's location.
+
+# Don't fail the build on rate-limited or transiently unreachable external hosts.
+accept = [200, 206, 429]
+
+# Skip endpoints that are examples/placeholders, not real reachable URLs.
+exclude = [
+  "^https://mcp\\.management\\.azure\\.com",
+  "^https://github\\.com/finops-squad",
+]
+
+# Treat these as fine without a network round-trip.
+exclude_loopback = true
+
+# Be patient with slow hosts.
+timeout = 20
+max_retries = 2

@@ -1,0 +1,50 @@
+{
+  "capturedAt": "2026-10-13T00:00:00Z",
+  "subscriptionId": "00000000-0000-0000-0000-000000000001",
+  "subscriptionName": "sandbox-dev",
+  "currency": "AUD",
+  "resources": [
+    {
+      "id": "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg-dev/providers/Microsoft.Compute/disks/disk-orphan-01",
+      "type": "Microsoft.Compute/disks",
+      "name": "disk-orphan-01",
+      "location": "australiaeast",
+      "resourceGroup": "rg-dev",
+      "sku": "Premium_LRS",
+      "sizeGb": 128,
+      "diskState": "Unattached",
+      "tags": { "env": "dev" }
+    },
+    {
+      "id": "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg-dev/providers/Microsoft.Network/publicIPAddresses/pip-orphan-01",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "pip-orphan-01",
+      "location": "australiaeast",
+      "resourceGroup": "rg-dev",
+      "sku": "Standard",
+      "ipConfiguration": null,
+      "associated": false,
+      "tags": {}
+    },
+    {
+      "id": "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg-dev/providers/Microsoft.Compute/virtualMachines/vm-idle-01",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "vm-idle-01",
+      "location": "australiaeast",
+      "resourceGroup": "rg-dev",
+      "vmSize": "Standard_D4s_v5",
+      "powerState": "running",
+      "tags": { "env": "dev", "owner": "platform" }
+    },
+    {
+      "id": "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg-prod/providers/Microsoft.Storage/storageAccounts/stproddata01",
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "stproddata01",
+      "location": "australiaeast",
+      "resourceGroup": "rg-prod",
+      "sku": "Standard_GRS",
+      "accessTier": "Hot",
+      "tags": { "env": "prod", "costCenter": "CC-1001" }
+    }
+  ]
+}
