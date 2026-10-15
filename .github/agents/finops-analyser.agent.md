@@ -61,7 +61,10 @@ entitlement confirmation.
 
 Compute tag coverage against the required taxonomy (e.g. `env`, `owner`, `costCenter`,
 `application`); identify untagged/mis-tagged resources and the share of spend that is
-unallocatable; propose a taxonomy and an Azure Policy enforcement approach. Usually **T0**
+unallocatable; propose a taxonomy and an Azure Policy enforcement approach. **State compliance
+against the FinOps Framework's named target of >90% Overall Tagging Compliance** (not just a raw
+coverage number) — `scripts/kpis.py` computes this automatically as `taggingCompliance` once
+`inventory.json` carries `tagCoverage.fullyTaggedCount`. Usually **T0**
 (additive policy/tags). `estimatedMonthlySaving` is often 0 — value is allocation accuracy, label
 it honestly.
 
@@ -91,7 +94,12 @@ Graph. **Corroborate with more than one signal before calling anything anomalous
 the worked false-positive example in
 [idle-compute-detection](../skills/idle-compute-detection/SKILL.md) (an Azure Firewall showing 0
 bps average throughput looked idle until a second metric showed ~43,000 real rule hits/day).
-Usually **T0** (explanatory; no change) unless it surfaces a concrete waste item.
+**Compare against the persisted baseline from the prior run**, not only within this run's own
+period-over-period window — read the previous run folder's `findings/anomalies.json` and
+`reports/kpis.json` `anomalyCount` to say whether anomaly activity is trending up, down, or flat
+since last time (this is the Anomaly Management capability's maturity bar: Crawl-level tooling only
+checks within a single pass; Run-level tracks and trends detection over time). Usually **T0**
+(explanatory; no change) unless it surfaces a concrete waste item.
 
 **Output:** `findings/anomalies.json`, `type: "anomaly"`, or `investigations/<slug>.json` if the
 hypothesis doesn't hold up.

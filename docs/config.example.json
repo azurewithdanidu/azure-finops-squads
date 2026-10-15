@@ -18,5 +18,8 @@
   "waste": {
     "orphanMinAgeDays": 14,
     "idleObservationDays": 14
+  },
+  "tagging": {
+    "requiredTags": ["owner", "environment", "application"]
   }
 }

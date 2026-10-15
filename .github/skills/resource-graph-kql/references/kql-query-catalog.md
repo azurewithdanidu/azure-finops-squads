@@ -46,3 +46,38 @@ Resources
 | extend hasOwner = isnotempty(tags['owner']), hasCostCenter = isnotempty(tags['costCenter'])
 | summarize total=count(), missingOwner=countif(not(hasOwner)), missingCostCenter=countif(not(hasCostCenter)) by type
 ```
+
+## Fully-tagged resource count (for the Framework's "Overall Tagging Compliance" KPI)
+
+Per-tag missing counts understate non-compliance — a resource missing only one of several
+required tags is still non-compliant overall. This query counts resources that carry **every**
+required tag, which is what the 90% target in
+[tagging-policy-design](../../tagging-policy-design/SKILL.md) actually measures:
+
+```kql
+Resources
+| extend hasOwner = isnotempty(tags['owner']),
+         hasEnvironment = isnotempty(tags['environment']),
+         hasApplication = isnotempty(tags['application'])
+| extend fullyTagged = hasOwner and hasEnvironment and hasApplication
+| summarize total=count(), fullyTaggedCount=countif(fullyTagged)
+```
+
+Adjust the `has*`/`fullyTagged` fields to match the org's actual required-tag set (see
+`.finops/config.json`'s optional `tagging.requiredTags`, default `owner`/`environment`/`application`
+— `scripts/kpis.py` uses the same default list).
+
+## Resource group tags (for allocation-coverage joins)
+
+Resource groups often carry the canonical ownership/cost-centre tags that resources inherit. This
+returns every resource group's own tags, suitable for joining against `spend.byResourceGroup` to
+estimate what share of spend is allocatable (see `scripts/kpis.py`'s `allocationCoverage` KPI):
+
+```kql
+ResourceContainers
+| where type == 'microsoft.resources/subscriptions/resourcegroups'
+| project name, tags
+```
+
+Page with `$skipToken` as usual — a subscription with many resource groups will exceed a single
+page.

@@ -24,7 +24,15 @@ update, delete, or power-state operation, on `compute`/`storage` or on the `arm`
    `azure_query_azure_resource_graph` host tool, which has returned "not registered" errors. Use
    Azure MCP `compute`/`storage`/`group` tools for per-resource detail. Capture id, type, name,
    location, resourceGroup, sku/size, key state (diskState, powerState, ipConfiguration), and tags.
-   See [resource-graph-kql](../skills/resource-graph-kql/SKILL.md).
+   See [resource-graph-kql](../skills/resource-graph-kql/SKILL.md). Also capture, where feasible:
+   - `tagCoverage.fullyTaggedCount` — count of resources carrying **every** required tag (not just
+     per-tag missing counts) via the fully-tagged-resource-count query in
+     [kql-query-catalog.md](../skills/resource-graph-kql/references/kql-query-catalog.md) — this
+     backs the tagging-compliance KPI's comparison against the FinOps Framework's named 90% bar.
+   - `resourceGroupTags` — a `{ "<rgName>": {tag: value, ...} }` map from the resource-group-tags
+     query in the same catalog — this backs the allocation-coverage KPI (joined against
+     `spend.json`'s per-resource-group costs). Omit honestly if time/scope doesn't allow a full
+     scan rather than guessing partial data.
 2. **`spend.json`** — spend by service / resource group / tag over the time window. **Try
    `arm.query_costs` first** — it has been live-verified to work with no extra configuration in
    this host and needs only Cost Management Reader. Use

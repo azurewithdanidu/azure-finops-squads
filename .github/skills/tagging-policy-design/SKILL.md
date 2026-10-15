@@ -24,6 +24,7 @@ the value is accurate allocation and accountability. Label it honestly.
 | Artifact / field | Result |
 |---|---|
 | `findings/tagging.json` entry (`type: "tagging-gap"`, tier `T0`) | Taxonomy + policy proposal, coverage numbers |
+| `reports/kpis.json` → `kpis.taggingCompliance` | Compliance % vs the Framework's 90% target, computed by `scripts/kpis.py` |
 
 ## Recommended taxonomy (adapt to the org)
 
@@ -35,11 +36,25 @@ the value is accurate allocation and accountability. Label it honestly.
 | `application` | workload grouping | payments-api |
 | `dataClass` | optional governance | internal / confidential |
 
+## The Framework's named target: 90% Overall Tagging Compliance
+
+The [FinOps Framework's Reporting & Analytics capability](https://www.finops.org/framework/capabilities/reporting-analytics/)
+names a specific Measure of Success: **"Overall Tagging Compliance is greater than 90%."** Compute
+and state compliance against this exact bar — not just a raw coverage percentage with no reference
+point. `python scripts/kpis.py <run>/` computes this automatically (as `kpis.taggingCompliance`) and
+flags `meetsTarget: false` below 90%; always report both the number and whether it clears the bar.
+
+Compliance here means a resource carries **all** required tags, not just one — a resource missing
+only `costCenter` is still non-compliant, even if it has `owner` and `environment`. Don't report
+"90% have an owner tag" as if it were overall compliance; that overstates the picture.
+
 ## Method
 
 1. Measure coverage per required tag with Resource Graph
    ([resource-graph-kql](../resource-graph-kql/SKILL.md)) and the share of **spend** that is
-   unallocatable.
+   unallocatable. Prefer the **fully-tagged-resource-count** query in
+   [references/kql-query-catalog.md](../resource-graph-kql/references/kql-query-catalog.md) over
+   per-tag counts alone — it is what the 90% target above actually measures.
 2. Propose the taxonomy, allowed values, and inheritance (RG → resource).
 3. Enforce with Azure Policy — `audit` first, then `modify` to backfill, only `deny` once coverage
    is high. A concrete audit/modify/deny rollout sequence is in
@@ -63,8 +78,16 @@ the value is accurate allocation and accountability. Label it honestly.
 | Resource naming and tagging decision guide | https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-tagging |
 | Policy effects (`audit`/`modify`/`deny`) | https://learn.microsoft.com/en-us/azure/governance/policy/concepts/effects |
 
+### FinOps Foundation
+
+| Topic | Link |
+|---|---|
+| Reporting & Analytics capability (source of the 90% target) | https://www.finops.org/framework/capabilities/reporting-analytics/ |
+
 ### Key takeaways
 
 - `audit` → `modify` → `deny` is the safe rollout order — jumping straight to `deny` is the single
   most common way this finding type backfires.
 - The saving is allocation accuracy, not dollars — say so plainly rather than inventing a number.
+- 90% is a named Framework target, not an arbitrary one — cite it, and say honestly whether the
+  subscription clears it.

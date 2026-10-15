@@ -32,6 +32,7 @@ resources and spot orphans without per-resource calls.
 | `inventory.json` | Resource rows with id, type, location, resourceGroup, sku, tags |
 | Orphan candidate lists | Feeds `findings/waste.json` evidence (disk/IP/NIC ids + state) |
 | Tag coverage counts | Feeds `findings/tagging.json` coverage/allocation numbers |
+| `inventory.json` `tagCoverage.fullyTaggedCount` / `resourceGroupTags` | Feeds `scripts/kpis.py`'s `taggingCompliance` and `allocationCoverage` KPIs |
 
 ## Method
 
@@ -41,8 +42,10 @@ resources and spot orphans without per-resource calls.
    treat results as non-conclusive until no `skipToken` is returned.
 3. Use the tested queries in
    [references/kql-query-catalog.md](references/kql-query-catalog.md) (inventory, unattached
-   disks, unassociated public IPs, empty NICs, tag coverage) as your starting point rather than
-   writing each query from scratch.
+   disks, unassociated public IPs, empty NICs, per-tag coverage, **fully-tagged resource count**,
+   **resource group tags**) as your starting point rather than writing each query from scratch.
+   The fully-tagged and resource-group-tag queries back the KPI dashboard's tagging-compliance and
+   allocation-coverage metrics — prefer them over per-tag counts when building `inventory.json`.
 
 ## Pitfalls
 

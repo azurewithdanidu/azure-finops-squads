@@ -19,6 +19,7 @@ unavailable.
 |---|---|
 | `arm.query_costs` (baseline + observed period) | The delta to decompose |
 | `monitor` activity logs, Resource Graph timestamps | Correlated deployments/SKU changes/scale events |
+| Prior run's `findings/anomalies.json` + `reports/kpis.json` | The persisted baseline — compare anomaly activity across runs, not just within one |
 
 ## Outputs
 
@@ -26,6 +27,7 @@ unavailable.
 |---|---|
 | `findings/anomalies.json` entry (`type: "anomaly"`) | Baseline vs observed, delta breakdown, correlated activity |
 | `investigations/<slug>.json` | Written instead, when the hypothesis doesn't hold up |
+| `reports/kpis.json` `anomalyCount` (via `scripts/kpis.py`) | This run's count + trend vs the prior run |
 
 ## Method
 
@@ -36,6 +38,12 @@ unavailable.
 3. **Correlate**: line up the delta with activity — deployments, SKU changes, scale-out, new
    resources, region moves — using `monitor` activity logs and Resource Graph timestamps.
 4. **Classify**: expected (planned rollout) vs unexpected (leak, runaway job, misconfig).
+5. **Persist the baseline across runs**: this is the difference between Crawl-level anomaly
+   management ("manually checking... reacting more than a week after it occurs") and Run-level
+   ("mature anomaly detection tooling... alert thresholds iteratively updated"). Read the
+   immediately prior run's `findings/anomalies.json` (same subscription) and report whether the
+   anomaly count/pattern is trending up, down, or flat — not just whether *this* window had a
+   spike. If no prior run exists, say so plainly rather than inventing a trend.
 
 Usually **T0** (explanatory). If it reveals a concrete reducible cost (e.g. a forgotten load test
 cluster), set a real `estimatedMonthlySaving`; otherwise 0, labelled.
@@ -58,9 +66,18 @@ cluster), set a real `estimatedMonthlySaving`; otherwise 0, labelled.
 | Activity log overview | https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/activity-log |
 | Cost Management data latency | https://learn.microsoft.com/en-us/azure/cost-management-billing/automate/ratelimits-cost-management-api-data-latency |
 
+### FinOps Foundation
+
+| Topic | Link |
+|---|---|
+| Anomaly Management capability (Crawl/Walk/Run maturity bar) | https://www.finops.org/framework/capabilities/anomaly-management/ |
+
 ### Key takeaways
 
 - Decompose to the resource/meter level before correlating — "Compute went up" isn't an
   explanation, "3 new D4s_v5 VMs tagged to release X" is.
 - An unexplained spike that doesn't correlate with any activity is still honest to report as
   unexplained — don't force a correlation that isn't there.
+- Baseline persistence across runs is what separates Crawl-level anomaly management from Run-level
+  — a single-run detection with no memory of the last run is still Crawl, no matter how good the
+  decomposition is.

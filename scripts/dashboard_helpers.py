@@ -66,6 +66,53 @@ def load_iteration(run: Path) -> dict | None:
     return load_json(run / "iteration.json")
 
 
+def load_kpis(run: Path) -> dict | None:
+    """Load the named KPI set (reports/kpis.json), if `scripts/kpis.py` has been run for this run.
+
+    Returns None when absent — KPIs are an additive reporting layer, not a hard requirement, so
+    the dashboard must degrade gracefully (same pattern as load_iteration).
+    """
+    return load_json(run / "reports" / "kpis.json")
+
+
+# The 5 named KPIs and the dotted path to each one's numeric value, used by kpi_trend_dataframe.
+KPI_VALUE_PATHS = {
+    "taggingCompliance": ("kpis", "taggingCompliance", "value"),
+    "allocationCoverage": ("kpis", "allocationCoverage", "value"),
+    "estimatedSavingsOpportunity": ("kpis", "estimatedSavingsOpportunity", "value"),
+    "realisedSavingsRate": ("kpis", "realisedSavingsRate", "value"),
+    "anomalyCount": ("kpis", "anomalyCount", "value"),
+}
+
+
+def kpi_trend_dataframe(runs: list[Path], metric_key: str) -> pd.DataFrame:
+    """Build a run-over-run trend for one named KPI across every run folder in `runs`.
+
+    `runs` should be sorted oldest-first (reverse of dashboard.list_runs()'s newest-first order)
+    so a line chart reads left-to-right chronologically. Runs with no kpis.json, or where this
+    specific metric is unavailable, get `available=False` and `value=None` rather than being
+    silently dropped — the caller can choose to show gaps instead of a misleadingly smooth line.
+    """
+    path = KPI_VALUE_PATHS.get(metric_key)
+    if path is None:
+        raise ValueError(f"Unknown KPI metric_key: {metric_key!r}")
+
+    rows = []
+    for run in runs:
+        kpis = load_kpis(run)
+        value = None
+        if kpis is not None:
+            node = kpis
+            for key in path:
+                if not isinstance(node, dict):
+                    node = None
+                    break
+                node = node.get(key)
+            value = node
+        rows.append({"runId": run.name, "value": value, "available": value is not None})
+    return pd.DataFrame(rows)
+
+
 def compare_runs(findings_a: list[dict], findings_b: list[dict]) -> dict[str, list[dict]]:
     """Diff two runs' findings by (type, resourceId) — not by `id`, which is only stable within a
     single run's own numbering. Returns:

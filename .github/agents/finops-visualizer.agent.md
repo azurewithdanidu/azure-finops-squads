@@ -1,6 +1,6 @@
 ---
 name: finops-visualizer
-description: Produces executive summary, engineer backlog and savings ledger (estimated vs realised) from run artifacts, and points to the interactive dashboard. Read-only; writes into reports/.
+description: Produces executive summary, engineer backlog, savings ledger, and a named KPI set (estimated vs realised) from run artifacts, and points to the interactive dashboard. Read-only; writes into reports/.
 tools: [execute, read, agent, vscodeGeneral/rename, vscodeGeneral/usages, vscodeNotebooks/createJupyterNotebook, vscodeNotebooks/editNotebook, edit, search, 'azure-mcp/*']
 ---
 
@@ -32,7 +32,13 @@ You turn run artifacts into human-facing reports and visualizations. Follow
    ledger groups by currency and never sums mixed currencies into one total — if
    `ledger["mixedCurrencies"]` is `true`, report each currency in `ledger["byCurrency"]`
    separately; the top-level `totals`/`byType` reflect only the primary (most-findings) currency.
-4. **`retrospective.md`** — only if `iteration.md` exists for this run (or a prior run sharing its
+4. **`kpis.json`** — generate with `python scripts/kpis.py .finops/runs/<id>/ --runs-dir .finops/runs`
+   (run this **after** `ledger.py`, which it reuses internally). A small, named KPI set per
+   [finops-reporting](../skills/finops-reporting/SKILL.md): `taggingCompliance` (vs the Framework's
+   named >90% target), `allocationCoverage`, `estimatedSavingsOpportunity`,
+   `realisedSavingsRate`, and `anomalyCount` (trended against the nearest earlier run). Any KPI
+   whose inputs are missing reports `method`/`trend: "unavailable"` with a `note` — never a guess.
+5. **`retrospective.md`** — only if `iteration.md` exists for this run (or a prior run sharing its
    `iterationId`). See the Retrospective section below.
 
 ## Retrospective (only when there's an iteration brief)

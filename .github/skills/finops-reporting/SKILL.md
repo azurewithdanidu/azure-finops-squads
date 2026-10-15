@@ -25,6 +25,7 @@ Two audiences, one truth. Keep basis and confidence on every number.
 | `reports/executive-summary.md` | Spend trend, estimated vs realised saving, headline findings, status |
 | `reports/engineer-backlog.md` | Ranked, actionable finding table |
 | `reports/savings-ledger.json` | Estimated vs realised, by finding type, grouped by currency |
+| `reports/kpis.json` | Named KPI set (tagging compliance, allocation coverage, savings opportunity, realised rate, anomaly trend) — see KPI set below |
 | `reports/retrospective.md` | Only when an `iteration.md` brief exists — see Retrospective below |
 
 ## Executive summary (`executive-summary.md`)
@@ -49,6 +50,24 @@ Two audiences, one truth. Keep basis and confidence on every number.
   `ledger["mixedCurrencies"]` is `true` whenever more than one currency is present, and
   `ledger["byCurrency"]` carries every currency's own totals. Never report the top-level totals as
   if they covered a mixed-currency run — check `mixedCurrencies` first.
+
+## KPI set (`kpis.json`)
+
+Generate with `python scripts/kpis.py .finops/runs/<id>/ --runs-dir .finops/runs`. Per the FinOps
+Framework's [KPIs & Benchmarking capability](https://www.finops.org/framework/capabilities/kpis-benchmarking/)
+("a curated, well-documented set of KPIs... regularly reviewed for relevance" — not raw, unnamed
+totals), this is a small, named set rather than every number the run produced:
+
+| KPI | What it measures | Honesty rule |
+|---|---|---|
+| `taggingCompliance` | % of resources with **every** required tag, vs the Framework's named >90% target | `method: "unavailable"` with a `note` when `inventory.json` lacks the data — never guessed |
+| `allocationCoverage` | % of spend attributable to resource groups with full tag coverage | Same — requires both a spend breakdown and `resourceGroupTags`; states exactly which is missing |
+| `estimatedSavingsOpportunity` | Primary-currency total from the savings ledger | Notes when the run is mixed-currency rather than silently reporting a partial total |
+| `realisedSavingsRate` | realised ÷ estimated, as a % | 0% (not "unavailable") when nothing has been estimated yet — that's a true zero, not missing data |
+| `anomalyCount` | This run's anomaly count, trended vs the nearest earlier run | `trend: "unavailable"` with no earlier run to compare against — never assumes "flat" by default |
+
+Every KPI's `method`/`trend` field states exactly how it was computed (or why it couldn't be) —
+report that provenance alongside the number, the same as a finding's evidence.
 
 ## Retrospective (`retrospective.md`, only with an iteration brief)
 
@@ -97,9 +116,18 @@ using FOCUS-aligned words is not the same claim as emitting FOCUS-shaped data.
 | FinOps Open Cost and Usage Specification (FOCUS) | https://focus.finops.org/ |
 | Cost Management reporting exports | https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/tutorial-export-acm-data |
 
+### FinOps Foundation
+
+| Topic | Link |
+|---|---|
+| Reporting & Analytics capability (named KPIs, 90% tagging target, allocation coverage output) | https://www.finops.org/framework/capabilities/reporting-analytics/ |
+| KPIs & Benchmarking capability (curated, named KPI sets) | https://www.finops.org/framework/capabilities/kpis-benchmarking/ |
+
 ### Key takeaways
 
 - Estimated and realised are two numbers, always — a reader should never have to guess which one
   they're looking at.
 - A $0 saving (e.g. a tagging-gap finding) is reported as $0, not omitted — omission reads as
   inflation by hindsight.
+- A named, small KPI set beats a wall of raw totals — pick a handful (per the Framework's own
+  "start small" guidance) and keep them consistent across runs so trends are actually comparable.
