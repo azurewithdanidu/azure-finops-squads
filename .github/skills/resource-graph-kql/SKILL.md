@@ -11,61 +11,38 @@ host. Prefer it over the host tool `azure_query_azure_resource_graph`, which has
 `arm.execute_query` is unavailable in your environment. This is the fastest way to inventory
 resources and spot orphans without per-resource calls.
 
-Recommended workflow for a query you're unsure about: `arm.generate_query` (natural language →
-KQL) → `arm.validate_query` (syntax check) → `arm.execute_query` (run it). After executing, always
-check for a `skipToken` in the response and page through with it — treat results as non-conclusive
-until no `skipToken` is returned.
-
 ## When to use
 
 - Building `inventory.json`.
 - Finding orphans (unattached disks, unassociated public IPs, empty NICs).
 - Measuring tag coverage.
 
-## Core patterns
+## Inputs
 
-Inventory with key fields:
+| Source | Role |
+|---|---|
+| `arm.generate_query` | Natural language → draft KQL, for a query you're unsure how to write |
+| `arm.validate_query` | Syntax check before running, to avoid wasted round-trips |
+| `arm.execute_query` | Runs the validated KQL across the scoped subscriptions |
 
-```kql
-Resources
-| project id, name, type, location, resourceGroup, subscriptionId, sku=properties.sku, tags
-| order by type asc
-```
+## Outputs
 
-Unattached managed disks:
+| Artifact / field | Result |
+|---|---|
+| `inventory.json` | Resource rows with id, type, location, resourceGroup, sku, tags |
+| Orphan candidate lists | Feeds `findings/waste.json` evidence (disk/IP/NIC ids + state) |
+| Tag coverage counts | Feeds `findings/tagging.json` coverage/allocation numbers |
 
-```kql
-Resources
-| where type == 'microsoft.compute/disks'
-| where properties.diskState == 'Unattached'
-| project id, name, resourceGroup, location, sizeGb=properties.diskSizeGB, sku=sku.name
-```
+## Method
 
-Unassociated public IPs:
-
-```kql
-Resources
-| where type == 'microsoft.network/publicipaddresses'
-| where isnull(properties.ipConfiguration) and isnull(properties.natGateway)
-| project id, name, resourceGroup, location, sku=sku.name
-```
-
-Empty NICs (no VM):
-
-```kql
-Resources
-| where type == 'microsoft.network/networkinterfaces'
-| where isnull(properties.virtualMachine)
-| project id, name, resourceGroup, location
-```
-
-Tag coverage gap (missing required tags):
-
-```kql
-Resources
-| extend hasOwner = isnotempty(tags['owner']), hasCostCenter = isnotempty(tags['costCenter'])
-| summarize total=count(), missingOwner=countif(not(hasOwner)), missingCostCenter=countif(not(hasCostCenter)) by type
-```
+1. For an unfamiliar query: `arm.generate_query` (natural language → KQL) → `arm.validate_query`
+   (syntax check) → `arm.execute_query` (run it).
+2. After executing, always check for a `skipToken` in the response and page through with it —
+   treat results as non-conclusive until no `skipToken` is returned.
+3. Use the tested queries in
+   [references/kql-query-catalog.md](references/kql-query-catalog.md) (inventory, unattached
+   disks, unassociated public IPs, empty NICs, tag coverage) as your starting point rather than
+   writing each query from scratch.
 
 ## Pitfalls
 
@@ -73,3 +50,25 @@ Resources
 - Resource Graph is eventually consistent — note the query time in evidence.
 - Page large results (`| take`/`$skipToken`); don't assume a single page is complete.
 - Resource Graph has **no cost data** — join with spend from `cost.query_spend` separately.
+
+---
+
+## References
+
+### Microsoft / Azure documentation
+
+| Topic | Link |
+|---|---|
+| Resource Graph overview | https://learn.microsoft.com/en-us/azure/governance/resource-graph/overview |
+| Resource Graph query language (KQL subset) | https://learn.microsoft.com/en-us/azure/governance/resource-graph/concepts/query-language |
+| Starter queries and samples | https://learn.microsoft.com/en-us/azure/governance/resource-graph/samples/starter |
+| `az graph query` CLI reference | https://learn.microsoft.com/en-us/cli/azure/graph |
+
+### Key takeaways
+
+- `arm.execute_query` is live-verified in this host; `azure_query_azure_resource_graph` is not —
+  don't retry the broken tool before falling back to the CLI.
+- A result page without a `skipToken` is the only safe "complete" signal — anything else risks an
+  undercount in `inventory.json` or a finding.
+- Resource Graph tells you *what* and *state*; it never tells you *cost* — pair it with
+  [cost-query-patterns](../cost-query-patterns/SKILL.md).

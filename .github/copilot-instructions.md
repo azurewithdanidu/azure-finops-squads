@@ -49,6 +49,7 @@ Agents never talk directly. They read and write JSON/Markdown artifacts under `.
     inventory.json  spend.json  advisor.json
     findings/ waste.json rightsizing.json tagging.json commitments.json anomalies.json
     investigations/<slug>.json        # checked, but no finding -- preserved for audit
+    run-status.md                     # live phase dashboard; see run-orchestration skill
     plan.md                           # ranked, approved items
     verification/<finding-id>.json
     reports/ executive-summary.md engineer-backlog.md savings-ledger.json

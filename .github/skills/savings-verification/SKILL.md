@@ -7,6 +7,24 @@ description: Confirm whether a merged change actually reduced cost, allowing for
 
 Close the loop honestly: a saving is only **realised** when later cost data shows it.
 
+## When to use
+
+- The Analyser is invoked in `verify` mode for a finding whose `status` is `merged`.
+
+## Inputs
+
+| Source | Role |
+|---|---|
+| Finding's `status == merged` + `mergedAt` | Confirms the precondition and the settling-period clock |
+| `arm.query_costs` (post-merge window) | The observed cost slice to compare against baseline |
+
+## Outputs
+
+| Artifact / field | Result |
+|---|---|
+| `verification/<finding-id>.json` | `result`, `realisedSaving`, `notes` — see schema and worked example below |
+| `finding.status` | Moves to `verified` only on a `confirmed` result |
+
 ## Preconditions
 
 - Finding `status == merged` with a `mergedAt` date.
@@ -30,10 +48,29 @@ If data is too fresh or lagging, return `result: "inconclusive"` — do not forc
    | `inconclusive` | data too fresh / ambiguous / resource re-created |
 
 4. Write `verification/<finding-id>.json`
-   ([schema](../../../schemas/verification.schema.json)) with `notes` stating the lag allowance.
+   ([schema](../../../schemas/verification.schema.json)) with `notes` stating the lag allowance. A
+   full worked example is in [references/worked-example.md](references/worked-example.md).
 
 ## Pitfalls
 
 - Deleting then recreating a resource looks like "no saving" — check it stayed gone.
 - Seasonal/price changes can mask or mimic savings; compare like-for-like windows.
 - Never upgrade a finding to `verified` on an estimate alone.
+
+---
+
+## References
+
+### Microsoft / Azure documentation
+
+| Topic | Link |
+|---|---|
+| Cost Management data latency | https://learn.microsoft.com/en-us/azure/cost-management-billing/automate/ratelimits-cost-management-api-data-latency |
+| Understand Cost Management data | https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/understand-cost-mgt-data |
+
+### Key takeaways
+
+- The settling period and cost-data lag aren't optional — a verdict issued before both have elapsed
+  is not honest, it's a guess with a timestamp.
+- `inconclusive` is a valid, often correct answer — resist the pressure to force `confirmed` or
+  `not-observed` early.

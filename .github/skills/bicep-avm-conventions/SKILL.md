@@ -8,10 +8,28 @@ description: Apply Azure Verified Modules (AVM) and Bicep style when authoring r
 Mirrors [bicep.instructions.md](../../instructions/bicep.instructions.md); use this when actively
 authoring a fix.
 
+## When to use
+
+- Every time the Implementer writes or edits a `.bicep`/`.bicepparam` file for a finding.
+
+## Inputs
+
+| Source | Role |
+|---|---|
+| `bicepschema` | Confirms real resource/module shapes and required parameters |
+| [iac-matching](../iac-matching/SKILL.md) result | The exact file/module to edit |
+
+## Outputs
+
+| Artifact / field | Result |
+|---|---|
+| Bicep diff in the PR | One logical change, AVM-aligned, typed/described parameters |
+
 ## Modules
 
 - Prefer AVM registry modules, pinned to a version:
-  `module budget 'br/public:avm/res/consumption/budget:<version>' = { ... }`.
+  `module budget 'br/public:avm/res/consumption/budget:<version>' = { ... }`. A full worked example
+  is in [references/worked-example.md](references/worked-example.md).
 - Don't reinvent a resource AVM already wraps. One logical change per PR.
 
 ## Parameters & style
@@ -38,3 +56,23 @@ authoring a fix.
 - `bicep build` / `az bicep lint` should pass.
 - Call out parameters the reviewer must set (thresholds, emails, target SKU).
 - The Implementer never deploys; it only proposes.
+
+---
+
+## References
+
+### Microsoft / Azure documentation
+
+| Topic | Link |
+|---|---|
+| Azure Verified Modules | https://azure.github.io/Azure-Verified-Modules/ |
+| AVM Bicep resource module index | https://azure.github.io/Azure-Verified-Modules/indexes/bicep/bicep-resource-modules/ |
+| Bicep best practices | https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/best-practices |
+| `bicep lint` | https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/linter |
+
+### Key takeaways
+
+- Always pin an exact AVM module version — `:latest` or an untagged reference is not reproducible
+  and not reviewable.
+- One logical change per PR is non-negotiable even when a finding touches multiple small params —
+  split if it isn't genuinely one change.

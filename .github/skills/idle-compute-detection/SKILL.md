@@ -8,6 +8,26 @@ description: Decide whether a VM, scale set or gateway is idle or oversized usin
 Use real Azure Monitor metrics over a stated window. Never call a resource idle from a single data
 point.
 
+## When to use
+
+- A `waste`-mode candidate needs an idle/not-idle verdict.
+- A `rightsizing`-mode candidate needs a target SKU with headroom evidence.
+
+## Inputs
+
+| Source | Role |
+|---|---|
+| Azure MCP `monitor` (`metrics query`/`batchquery`) | avg/max/p95 CPU, memory, network, and rule-hit signals |
+| `inventory.json` | Candidate resource list and current SKU |
+| Stated observation window | Default 14 days minimum, hourly grain; prefer 30 days |
+
+## Outputs
+
+| Artifact / field | Result |
+|---|---|
+| `findings/waste.json` evidence | Idle verdict + the exact window/grain/metrics used |
+| `findings/rightsizing.json` evidence | Target SKU + priced delta for an oversized candidate |
+
 ## Observation window
 
 - Default: **14 days** minimum, hourly grain. Prefer 30 days to span weekly cycles.
@@ -30,29 +50,36 @@ point.
 1. Pull metrics via Azure MCP `monitor` (`metrics query`/`batchquery`). Use batch for many VMs.
 2. Compute avg, max and p95; compare to thresholds.
 3. For downsizes, pick a target SKU with headroom and price the delta.
-
-## Network/security appliances (firewalls, gateways) — use rule/throughput metrics together
-
-**Never call a firewall, NAT gateway, or VPN/ExpressRoute gateway idle from a bandwidth metric
-alone.** Worked example from a live investigation: an Azure Firewall showed `Throughput` averaging
-**0 bits/sec** over 7 days (daily grain) — on its own, that looked like a clean "idle, delete it"
-candidate, especially since it was also the subscription's single largest cost line. But a second
-metric, `NetworkRuleHit`, showed **~43,000 hits/day, every day** — the firewall was actively
-evaluating real traffic the whole time. The `Throughput` average simply rounded down at daily
-granularity because the traffic was small-packet/rule-evaluation volume, not bulk data transfer.
-Concluding "idle" from `Throughput` alone would have produced a false-positive finding against a
-production hub resource.
-
-**Rule for this category:** before proposing any finding for a firewall, NAT gateway, VPN gateway,
-or ExpressRoute gateway, pull **at least two independent signals** —
-e.g. `Throughput`/`DataProcessed` **and** `NetworkRuleHit`/`ApplicationRuleHit`/connection-count —
-and only conclude idle if **all** of them are near-zero across the whole window. A high cost alone
-is never evidence of waste; it only tells you where to look.
+4. For network/security appliances (firewalls, gateways), **never** rely on one bandwidth metric —
+   follow [references/network-appliance-false-positive.md](references/network-appliance-false-positive.md)
+   and corroborate with a second, independent signal before calling anything idle.
 
 ## What NOT to trust
 
 - Short windows (< 7 days) or periods spanning maintenance/holidays.
 - CPU alone — a DB VM can be memory/IO bound. Check multiple signals.
-- A single traffic/bandwidth metric for network appliances — see the firewall example above.
+- A single traffic/bandwidth metric for network appliances — see the worked example in
+  [references/network-appliance-false-positive.md](references/network-appliance-false-positive.md).
 - Burstable (B-series) VMs: low average is by design; use credit metrics, not raw CPU.
 - Production without owner sign-off → **T3**, analysis only.
+
+---
+
+## References
+
+### Microsoft / Azure documentation
+
+| Topic | Link |
+|---|---|
+| Azure Monitor metrics overview | https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/data-platform-metrics |
+| Supported metrics for Microsoft.Compute/virtualMachines | https://learn.microsoft.com/en-us/azure/azure-monitor/reference/supported-metrics/microsoft-compute-virtualmachines-metrics |
+| Azure Firewall metrics (Throughput, NetworkRuleHit) | https://learn.microsoft.com/en-us/azure/firewall/metrics |
+| Azure Advisor performance/cost recommendations | https://learn.microsoft.com/en-us/azure/advisor/advisor-reference-cost-recommendations |
+| B-series burstable VM credits | https://learn.microsoft.com/en-us/azure/virtual-machines/sizes-b-series-burstable |
+
+### Key takeaways
+
+- A single metric is never proof of idle — corroborate with at least one independent signal,
+  always, not just for network appliances.
+- High cost tells you where to look, not what to conclude.
+- B-series "low average CPU" is by design, not evidence of oversizing.

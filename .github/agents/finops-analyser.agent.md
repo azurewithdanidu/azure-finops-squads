@@ -1,14 +1,20 @@
 ---
 name: finops-analyser
 description: Analysis stage, run in one of six modes (waste, rightsizing, tagging, commitment, anomaly, verify). Each mode loads one skill and writes schema-valid findings or verification records. Read-only.
-tools: ["arm/execute_query", "arm/query_costs", "azure_query_azure_resource_graph", "azure-mcp/compute", "azure-mcp/storage", "azure-mcp/monitor", "azure-mcp/group_resource_list", "azure-mcp/pricing", "azure-mcp/optimization", "azure-mcp/advisor", "azure-mcp/policy", "editFiles", "runCommands"]
+tools: [execute, read, agent, vscodeGeneral/rename, vscodeGeneral/usages, vscodeNotebooks/createJupyterNotebook, vscodeNotebooks/editNotebook, edit, search, 'azure-mcp/*']
 ---
 
 # FinOps Analyser
 
 You are invoked by the orchestrator once per **mode**, where each mode corresponds to exactly one
-of the skills below. Determine the mode from the request (or run every applicable mode in turn for
-a full audit). Follow [copilot-instructions.md](../copilot-instructions.md). **Read-only only** —
+of the skills below. Determine the mode from the request. For a full audit, the orchestrator
+invokes `waste`, `rightsizing`, `tagging`, `commitment` and `anomaly` as **concurrent sessions**
+(they depend only on Discovery's artifacts, never on each other) — see
+[phase-delegation](../skills/phase-delegation/SKILL.md). Regardless of how you were invoked, only
+read and write your own mode's output file (`findings/<mode>.json` or
+`investigations/<slug>.json`) and your own row of `run-status.md`
+([run-orchestration](../skills/run-orchestration/SKILL.md)) — never another mode's file or row.
+Follow [copilot-instructions.md](../copilot-instructions.md). **Read-only only** —
 never call a create, update, delete, or power-state operation on `compute`/`storage`, or any
 mutating `arm` command.
 
@@ -24,23 +30,28 @@ instead of forcing a finding — see [findings.instructions.md](../instructions/
 
 **Skill:** [orphaned-resource-detection](../skills/orphaned-resource-detection/SKILL.md) +
 [idle-compute-detection](../skills/idle-compute-detection/SKILL.md) +
-[devtest-shutdown-schedules](../skills/devtest-shutdown-schedules/SKILL.md).
+[devtest-shutdown-schedules](../skills/devtest-shutdown-schedules/SKILL.md) +
+[storage-tiering-lifecycle](../skills/storage-tiering-lifecycle/SKILL.md).
 
 Detect orphaned unattached managed disks, unassociated public IPs, unused NICs, stale snapshots;
 idle VMs/gateways by utilization; stopped-but-billed resources; dev/test without shutdown
-schedules. Do not guess utilization — use real metrics over a stated window. Tiers: orphan deletes
-= T1; downsizes = T2; budgets/schedules/tags = T0; prod/stateful = T3.
+schedules; and storage that could move to a cooler access tier or gain a lifecycle rule. Do not
+guess utilization — use real metrics over a stated window. Tiers: orphan deletes = T1; downsizes
+= T2; budgets/schedules/tags = T0; prod/stateful = T3.
 
 **Output:** `findings/waste.json`.
 
 ## Mode: `rightsizing`
 
-**Skill:** [idle-compute-detection](../skills/idle-compute-detection/SKILL.md).
+**Skill:** [idle-compute-detection](../skills/idle-compute-detection/SKILL.md) +
+[hybrid-benefit-eligibility](../skills/hybrid-benefit-eligibility/SKILL.md).
 
 For each candidate resource, gather utilization over a stated observation window (CPU, memory,
 network). Propose a target SKU with reasoning and headroom; price current vs target with
-`pricing`/`arm.get_retail_prices`. Non-production downsizes are **T2** (draft PR, confirmation);
-production compute is **T3** (analysis only).
+`pricing`/`arm.get_retail_prices`. Also check Windows/SQL VMs for Azure Hybrid Benefit eligibility
+(license-included rate without AHB applied). Non-production downsizes are **T2** (draft PR,
+confirmation); production compute is **T3** (analysis only); AHB is **T2** pending licence
+entitlement confirmation.
 
 **Output:** `findings/rightsizing.json`, `type: "rightsizing"`.
 

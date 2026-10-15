@@ -12,95 +12,40 @@ Reads schema-valid artifacts from .finops/runs/<id>/ and renders:
 - Status funnel (proposed -> ... -> verified)
 - Spend by service (or a trend, if that shape is present), or an honest "spend data unavailable"
   banner if the run genuinely couldn't retrieve it
+- Iteration progress (only if the run captured an optional iteration brief)
+- A cross-run comparison (resolved / recurring / new findings vs. another run)
 
 Everything is read-only. The dashboard never calls Azure and never mutates artifacts.
+Pure/IO helpers live in dashboard_helpers.py so they can be unit-tested without a Streamlit
+runtime — see tests/test_scripts.py.
 """
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import altair as alt
 import pandas as pd
 import streamlit as st
 
+from dashboard_helpers import (
+    STATUS_ORDER,
+    TIER_COLORS,
+    TIER_ORDER,
+    compare_runs,
+    findings_dataframe,
+    load_findings,
+    load_iteration,
+    load_json,
+    load_verifications,
+    list_runs as _list_runs,
+)
+
 REPO = Path(__file__).resolve().parent.parent
 RUNS_DIR = REPO / ".finops" / "runs"
 
-TIER_ORDER = ["T0", "T1", "T2", "T3"]
-TIER_COLORS = {"T0": "#34a853", "T1": "#4285f4", "T2": "#f9ab00", "T3": "#ea4335"}
-STATUS_ORDER = ["proposed", "approved", "pr-open", "merged", "verified", "rejected"]
-
-
-# --------------------------------------------------------------------------- IO
-def load_json(path: Path):
-    try:
-        return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return None
-
 
 def list_runs() -> list[Path]:
-    if not RUNS_DIR.is_dir():
-        return []
-    return sorted((p for p in RUNS_DIR.iterdir() if p.is_dir()), reverse=True)
-
-
-def load_findings(run: Path) -> list[dict]:
-    findings: list[dict] = []
-    fdir = run / "findings"
-    if not fdir.is_dir():
-        return findings
-    for path in sorted(fdir.glob("*.json")):
-        doc = load_json(path)
-        if doc is None:
-            continue
-        items = doc if isinstance(doc, list) else doc.get("findings", [doc])
-        for item in items:
-            if isinstance(item, dict) and "id" in item:
-                findings.append(item)
-    return findings
-
-
-def load_verifications(run: Path) -> dict[str, dict]:
-    out: dict[str, dict] = {}
-    vdir = run / "verification"
-    if not vdir.is_dir():
-        return out
-    for path in sorted(vdir.glob("*.json")):
-        doc = load_json(path)
-        if isinstance(doc, dict) and "findingId" in doc:
-            out[doc["findingId"]] = doc
-    return out
-
-
-def findings_dataframe(findings: list[dict], verifs: dict[str, dict]) -> pd.DataFrame:
-    rows = []
-    for f in findings:
-        saving = f.get("estimatedMonthlySaving", {}) or {}
-        iac = f.get("iacMatch", {}) or {}
-        ver = verifs.get(f.get("id"))
-        rows.append(
-            {
-                "id": f.get("id"),
-                "type": f.get("type"),
-                "tier": f.get("tier"),
-                "estimatedMonthly": float(saving.get("amount", 0) or 0),
-                "currency": saving.get("currency", "AUD"),
-                "basis": saving.get("basis"),
-                "confidence": f.get("confidence"),
-                "effort": f.get("effort"),
-                "iacMatch": iac.get("status"),
-                "status": f.get("status"),
-                "verifiedResult": (ver or {}).get("result"),
-                "realisedMonthly": float((ver or {}).get("realisedSaving", 0) or 0)
-                if ver and ver.get("result") in {"confirmed", "partial"}
-                else 0.0,
-                "resourceId": f.get("resourceId"),
-                "summary": f.get("summary"),
-            }
-        )
-    return pd.DataFrame(rows)
+    return _list_runs(RUNS_DIR)
 
 
 # ----------------------------------------------------------------------- render
@@ -122,16 +67,59 @@ ledger = load_json(run / "reports" / "savings-ledger.json") or {}
 findings = load_findings(run)
 verifs = load_verifications(run)
 df = findings_dataframe(findings, verifs)
+iteration = load_iteration(run)
 
 currency = ledger.get("currency") or config.get("currency") or "AUD"
 sub = spend.get("subscriptionId") or (config.get("subscriptions") or ["—"])[0]
 st.sidebar.markdown(f"**Subscription**\n\n`{sub}`")
 st.sidebar.markdown(f"**Currency**: {currency}")
 st.sidebar.markdown(f"**Price basis**: {config.get('priceBasis', '—')}")
+if iteration:
+    st.sidebar.markdown(f"**Iteration**: {iteration.get('iterationId', '—')}")
+
+mixed_currencies = bool(ledger.get("mixedCurrencies"))
+if mixed_currencies:
+    st.warning(
+        "⚠️ **This run mixes currencies across findings.** The KPIs and charts below reflect only "
+        f"the primary currency (**{currency}**, the one with the most findings) — see the "
+        "'Savings by currency' breakdown further down for the rest. Totals are never summed "
+        "across currencies."
+    )
 
 totals = ledger.get("totals", {})
 est = totals.get("estimatedMonthly", float(df["estimatedMonthly"].sum()) if not df.empty else 0.0)
 real = totals.get("realisedMonthly", float(df["realisedMonthly"].sum()) if not df.empty else 0.0)
+
+# Iteration progress (only if this run captured a brief)
+if iteration:
+    st.subheader("🎯 Iteration progress")
+    goals = iteration.get("goals", [])
+    window = iteration.get("measurementWindow", {})
+    st.caption(
+        f"**{iteration.get('iterationId', 'unnamed iteration')}** · "
+        f"window {window.get('from', '?')} → {window.get('to', '?')} · "
+        f"status: {iteration.get('status', 'in-progress')}"
+    )
+    if iteration.get("constraints"):
+        st.caption("Guardrails: " + "; ".join(iteration["constraints"]))
+    if goals:
+        goal_rows = []
+        for g in goals:
+            baseline = g.get("baseline", {})
+            target = g.get("target", {})
+            current = g.get("current", baseline)
+            goal_rows.append(
+                {
+                    "goal": g.get("description", "—"),
+                    "metric": g.get("metric", "—"),
+                    "baseline": baseline.get("value"),
+                    "current": current.get("value"),
+                    "target": target.get("value"),
+                }
+            )
+        st.dataframe(pd.DataFrame(goal_rows), use_container_width=True, hide_index=True)
+    else:
+        st.caption("No goals recorded in this iteration brief yet.")
 
 # KPIs
 c1, c2, c3, c4 = st.columns(4)
@@ -145,6 +133,20 @@ if real == 0 and est > 0:
         f"Realised saving is **{currency} 0.00** — nothing has been remediated and verified yet. "
         "Estimates are never counted as realised."
     )
+
+if mixed_currencies:
+    st.subheader("Savings by currency")
+    by_currency = ledger.get("byCurrency", {})
+    rows = [
+        {
+            "currency": c,
+            "estimatedMonthly": v["totals"]["estimatedMonthly"],
+            "realisedMonthly": v["totals"]["realisedMonthly"],
+            "findingCount": v["totals"]["findingCount"],
+        }
+        for c, v in sorted(by_currency.items())
+    ]
+    st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
 
 # Spend panel
 st.subheader("Spend")
@@ -253,6 +255,49 @@ with right2:
         ),
         use_container_width=True,
     )
+
+# Compare with another run — tells a repeat scan apart from real progress
+other_runs = [p.name for p in runs if p.name != run_name]
+if other_runs:
+    st.subheader("📊 Compare with another run")
+    compare_name = st.selectbox(
+        "Compare against", other_runs, index=0,
+        help="Findings are matched by (type, resourceId), not by id — ids are only stable within a single run.",
+    )
+    compare_run = RUNS_DIR / compare_name
+    compare_findings = load_findings(compare_run)
+    # Treat the earlier run (by folder-name sort order, which is the yyyymmdd-hhmm timestamp) as
+    # "a" and the later run as "b", regardless of which one is currently selected in the sidebar.
+    earlier, later = sorted([(compare_name, compare_findings), (run_name, findings)])
+    diff = compare_runs(earlier[1], later[1])
+    cc1, cc2, cc3 = st.columns(3)
+    cc1.metric("Resolved since earlier run", len(diff["resolved"]))
+    cc2.metric("Still recurring", len(diff["recurring"]))
+    cc3.metric("New this run", len(diff["new"]))
+    st.caption(f"Earlier run: `{earlier[0]}` · Later run: `{later[0]}`")
+    with st.expander("Resolved findings (no longer present)"):
+        if diff["resolved"]:
+            st.dataframe(
+                pd.DataFrame(
+                    [{"type": f.get("type"), "resourceId": f.get("resourceId"), "summary": f.get("summary")}
+                     for f in diff["resolved"]]
+                ),
+                use_container_width=True, hide_index=True,
+            )
+        else:
+            st.caption("None — nothing from the earlier run has been resolved.")
+    with st.expander("Recurring findings (still open in both runs)"):
+        if diff["recurring"]:
+            st.dataframe(
+                pd.DataFrame(
+                    [{"id": f.get("id"), "type": f.get("type"), "tier": f.get("tier"),
+                      "resourceId": f.get("resourceId"), "status": f.get("status")}
+                     for f in diff["recurring"]]
+                ),
+                use_container_width=True, hide_index=True,
+            )
+        else:
+            st.caption("None.")
 
 # Findings table
 st.subheader("Findings")

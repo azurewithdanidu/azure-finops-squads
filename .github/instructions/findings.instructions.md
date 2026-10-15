@@ -32,6 +32,12 @@ Everything an agent reads or writes under `.finops/` follows these rules.
 - `status` transitions (`proposed → approved → pr-open → merged → verified | rejected`) are owned
   **only** by the orchestrator, the Implementer, and the Analyser (in `verify` mode). Finding
   agents always emit `proposed`.
+- The same ownership discipline applies to `.finops/runs/<id>/run-status.md` (the pipeline-progress
+  dashboard, distinct from each finding's own `status` field — see
+  [run-orchestration](../skills/run-orchestration/SKILL.md)): every agent re-reads the file
+  immediately before writing it, edits only its own row, and never downgrades a row from ✅ to an
+  earlier state or reverts another agent's timestamp. On a write conflict, replay the edit onto the
+  latest copy (up to 3 retries) before recording a blocker and stopping.
 
 ## Investigations (checked, no finding)
 

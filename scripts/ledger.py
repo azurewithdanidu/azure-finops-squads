@@ -45,56 +45,94 @@ def iter_verifications(verification_dir: Path):
             yield doc
 
 
+def _empty_type_bucket() -> dict:
+    return {
+        "estimatedMonthly": 0.0,
+        "realisedMonthly": 0.0,
+        "findingCount": 0,
+        "verifiedCount": 0,
+    }
+
+
+def _round_bucket(bucket: dict) -> dict:
+    return {
+        "estimatedMonthly": round(bucket["estimatedMonthly"], 2),
+        "realisedMonthly": round(bucket["realisedMonthly"], 2),
+        "findingCount": bucket["findingCount"],
+        "verifiedCount": bucket["verifiedCount"],
+    }
+
+
 def build_ledger(run_folder: Path) -> dict:
+    """Build a ledger, grouped by currency.
+
+    A single run can legitimately mix currencies (e.g. a multi-subscription run, or a
+    finding priced in a different billing currency than the report default). Totals are
+    **never** summed across currencies — doing so silently produces a meaningless number.
+    Instead every currency present gets its own totals/byType breakdown under `byCurrency`,
+    and the top-level `currency`/`totals`/`byType` fields mirror whichever currency has the
+    most findings (kept for backward compatibility with single-currency runs and existing
+    consumers). `mixedCurrencies` is `true` whenever more than one currency is present, so
+    any consumer can detect the case and must not assume the top-level totals are complete.
+    """
     findings = {f["id"]: f for f in iter_findings(run_folder / "findings")}
     verifications = {v["findingId"]: v for v in iter_verifications(run_folder / "verification")}
 
-    by_type: dict[str, dict] = defaultdict(
-        lambda: {
-            "estimatedMonthly": 0.0,
-            "realisedMonthly": 0.0,
-            "findingCount": 0,
-            "verifiedCount": 0,
-        }
+    # by_currency[currency]["_totals"] holds the currency-level rollup;
+    # by_currency[currency]["byType"][type] holds the per-type rollup within that currency.
+    by_currency: dict[str, dict] = defaultdict(
+        lambda: {"_totals": _empty_type_bucket(), "byType": defaultdict(_empty_type_bucket)}
     )
-    currency = None
-    estimated_total = 0.0
-    realised_total = 0.0
 
     for fid, finding in findings.items():
         ftype = finding.get("type", "unknown")
-        saving = finding.get("estimatedMonthlySaving", {})
+        saving = finding.get("estimatedMonthlySaving", {}) or {}
         amount = float(saving.get("amount", 0) or 0)
-        currency = currency or saving.get("currency")
-        by_type[ftype]["estimatedMonthly"] += amount
-        by_type[ftype]["findingCount"] += 1
-        estimated_total += amount
+        fcurrency = saving.get("currency") or "AUD"
+
+        bucket = by_currency[fcurrency]
+        for target in (bucket["_totals"], bucket["byType"][ftype]):
+            target["estimatedMonthly"] += amount
+            target["findingCount"] += 1
 
         ver = verifications.get(fid)
         if ver and ver.get("result") in {"confirmed", "partial"}:
             realised = float(ver.get("realisedSaving", 0) or 0)
-            by_type[ftype]["realisedMonthly"] += realised
-            by_type[ftype]["verifiedCount"] += 1
-            realised_total += realised
+            for target in (bucket["_totals"], bucket["byType"][ftype]):
+                target["realisedMonthly"] += realised
+                target["verifiedCount"] += 1
+
+    if not by_currency:
+        return {
+            "currency": "AUD",
+            "mixedCurrencies": False,
+            "totals": _round_bucket(_empty_type_bucket()),
+            "byType": {},
+            "byCurrency": {},
+        }
+
+    # The "primary" currency for the backward-compatible top-level fields is whichever
+    # currency has the most findings (ties broken alphabetically for determinism) — never an
+    # arbitrary "first one seen".
+    primary_currency = max(
+        by_currency,
+        key=lambda c: (by_currency[c]["_totals"]["findingCount"], -ord(c[0])),
+    )
+
+    by_currency_out = {
+        c: {
+            "totals": _round_bucket(bucket["_totals"]),
+            "byType": {t: _round_bucket(v) for t, v in sorted(bucket["byType"].items())},
+        }
+        for c, bucket in sorted(by_currency.items())
+    }
 
     return {
-        "currency": currency or "AUD",
-        "totals": {
-            "estimatedMonthly": round(estimated_total, 2),
-            "realisedMonthly": round(realised_total, 2),
-            "findingCount": len(findings),
-            "verifiedCount": sum(1 for v in verifications.values()
-                                 if v.get("result") in {"confirmed", "partial"}),
-        },
-        "byType": {
-            t: {
-                "estimatedMonthly": round(v["estimatedMonthly"], 2),
-                "realisedMonthly": round(v["realisedMonthly"], 2),
-                "findingCount": v["findingCount"],
-                "verifiedCount": v["verifiedCount"],
-            }
-            for t, v in sorted(by_type.items())
-        },
+        "currency": primary_currency,
+        "mixedCurrencies": len(by_currency) > 1,
+        "totals": by_currency_out[primary_currency]["totals"],
+        "byType": by_currency_out[primary_currency]["byType"],
+        "byCurrency": by_currency_out,
     }
 
 

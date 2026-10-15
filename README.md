@@ -67,11 +67,11 @@ Agents communicate through schema-valid artifacts under `.finops/` (git-ignored)
   copilot-instructions.md        # global, binding rules
   agents/                        # 5 .agent.md definitions
   prompts/                       # run-audit, verify-savings, quick-waste-scan
-  skills/                        # 19 SKILL.md how-to packs
+  skills/                        # 22 SKILL.md how-to packs
   instructions/                  # bicep + .finops/** targeted rules
 .vscode/mcp.json.example         # MCP config template (git-ignored once copied)
 schemas/                         # finding + verification JSON Schemas
-scripts/                         # validate-findings.py, ledger.py, dashboard.py
+scripts/                         # validate-findings.py, ledger.py, dashboard.py, dashboard_helpers.py
 fixtures/                        # offline sample data
 docs/                            # architecture, capability map, tool inventory, risk tiers,
                                  # security model, getting started, config example
@@ -92,9 +92,11 @@ Full walkthrough: [docs/getting-started.md](docs/getting-started.md).
 ## Dashboard
 
 An interactive, read-only [Streamlit](https://streamlit.io) dashboard visualizes any run's
-artifacts — estimated vs realised savings, savings by type, findings by risk tier, a status funnel,
-a sortable findings table with evidence, and spend trend (or an honest "spend data unavailable"
-banner).
+artifacts — estimated vs realised savings (grouped by currency; mixed-currency runs are never
+blended into one misleading total), savings by type, findings by risk tier, a status funnel, a
+sortable findings table with evidence, spend trend (or an honest "spend data unavailable" banner),
+optional iteration-goal progress, and a run-to-run comparison showing resolved/recurring/new
+findings.
 
 ```bash
 pip install -r requirements-dev.txt

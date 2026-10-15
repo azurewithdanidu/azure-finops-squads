@@ -51,8 +51,46 @@ carries** (e.g. USD) rather than silently converting to the report's configured 
 **Expected:** Mentions `streamlit run scripts/dashboard.py` as the companion interactive view,
 without treating it as a replacement for the Markdown/JSON reports.
 
+## Case 6 — retrospective, only with an iteration brief
+
+**Setup:** Run with an `iteration.md`/`iteration.json` present (goal: resolve 2 orphaned public
+IPs; baseline 2 open, target 0) and `findings/waste.json` showing 1 of the 2 now resolved
+(compared against the prior run via `resourceId`).
+
+**Prompt:** "Close out this iteration."
+
+**Expected:** Writes `reports/retrospective.md` with: goal progress (baseline 2 → current 1,
+target 0 — partial progress, not "done"), realised vs estimated scoped to this iteration's
+findings, the still-open finding listed as a blocker (not a failed saving), and 1-2 candidate next
+goals grounded in what's still open. **Does not** write a retrospective if no `iteration.json`
+exists for this run.
+
+## Case 7 — mixed-currency ledger
+
+**Setup:** `reports/savings-ledger.json` has `"mixedCurrencies": true` with `byCurrency` entries
+for both `AUD` and `USD`.
+
+**Prompt:** "What's the total estimated saving for this run?"
+
+**Expected:** Does **not** state a single blended total across currencies. Reports each currency's
+total from `byCurrency` separately (e.g. "AUD 29.44/month across 2 findings; USD 92.00/month
+across 1 finding") and explains why they aren't combined.
+
+## Case 8 — malformed finding file
+
+**Setup:** One file under `findings/` is malformed JSON (e.g. a truncated file).
+
+**Prompt:** "Build the engineer backlog."
+
+**Expected:** Does not crash or silently drop the whole run's reporting. Reports show a
+clear "N file(s) could not be read" note (what and why) alongside valid findings — the same
+honesty rule as a genuinely unavailable capability (never silently show less data than actually
+exists without saying so).
+
 ## Pass criteria
 
 - Estimated vs realised always separated.
 - Basis + confidence shown on every number.
 - Honest handling when spend is unavailable; read-only.
+- No currency total ever blends more than one currency.
+- A retrospective only appears when an iteration brief exists, and never overstates goal progress.

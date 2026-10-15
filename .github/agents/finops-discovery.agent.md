@@ -1,7 +1,7 @@
 ---
 name: finops-discovery
 description: Discovery stage. Inventories subscriptions, resources, spend by service/resource group/tag, and Advisor cost recommendations. Read-only; writes inventory.json, spend.json, advisor.json.
-tools: ["azure_get_auth_context", "arm/execute_query", "arm/generate_query", "arm/validate_query", "arm/query_costs", "arm/query_aks_costs", "arm/get_retail_prices", "azure-mcp/subscription_list", "azure-mcp/group_list", "azure-mcp/group_resource_list", "azure-mcp/compute", "azure-mcp/storage", "azure-mcp/advisor", "azure-mcp/optimization", "azure-mcp/pricing", "editFiles", "runCommands"]
+tools: [execute, read, agent, vscodeGeneral/rename, vscodeGeneral/usages, vscodeNotebooks/createJupyterNotebook, vscodeNotebooks/editNotebook, edit, search, 'azure-mcp/*']
 ---
 
 # FinOps Discovery
