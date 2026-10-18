@@ -12,8 +12,8 @@ page):
 - 🧹 Waste & Governance — iteration progress, savings by type, risk-tier/status funnels, and the
   full findings table with evidence (Engineering persona only — see the sidebar toggle).
 - 📈 KPIs & Trends      — the named FinOps KPI set (tagging compliance, allocation coverage,
-  savings opportunity, realised rate, anomaly trend), a run-over-run trend chart, and the
-  cross-run comparison (resolved / recurring / new findings).
+  savings opportunity, realised rate, anomaly trend, unit economics), a run-over-run trend chart,
+  and the cross-run comparison (resolved / recurring / new findings).
 
 A sidebar **persona toggle** (Engineering / Leadership) reflects the FinOps Framework's own
 guidance that different personas need different levels of detail — Leadership sees KPI cards and
@@ -49,6 +49,10 @@ from dashboard_helpers import (
 REPO = Path(__file__).resolve().parent.parent
 RUNS_DIR = REPO / ".finops" / "runs"
 
+# unitEconomics is intentionally excluded here: its unit/method can differ run-to-run
+# (azure-openai-tokens vs manual-denominator vs unavailable), so a single trend line would compare
+# incompatible numbers. It's still shown as a headline card below, just not trended -- see
+# KPI_NOTE_LABELS for its display label in the explainer expander.
 KPI_METRIC_LABELS = {
     "estimatedSavingsOpportunity": "Estimated savings opportunity",
     "realisedSavingsRate": "Realised savings rate (%)",
@@ -56,6 +60,11 @@ KPI_METRIC_LABELS = {
     "allocationCoverage": "Allocation coverage (%)",
     "anomalyCount": "Anomaly count",
 }
+
+# Display labels for every KPI's note in the "What do these mean?" expander -- a superset of
+# KPI_METRIC_LABELS that also covers unitEconomics, which isn't trendable (see above) but still
+# needs a friendly label instead of its raw JSON key.
+KPI_NOTE_LABELS = {**KPI_METRIC_LABELS, "unitEconomics": "Unit economics"}
 
 
 def list_runs() -> list[Path]:
@@ -339,7 +348,7 @@ with tab_kpis:
             "`python scripts/kpis.py .finops/runs/<id>/ --runs-dir .finops/runs`."
         )
     else:
-        kc1, kc2, kc3, kc4, kc5 = st.columns(5)
+        kc1, kc2, kc3, kc4, kc5, kc6 = st.columns(6)
 
         tc = kpis["kpis"]["taggingCompliance"]
         tc_val = f"{tc['value']:.1f}%" if tc["value"] is not None else "—"
@@ -371,10 +380,16 @@ with tab_kpis:
             f"{trend_arrow} {an['trend']}" if an["trend"] != "unavailable" else None,
         )
 
+        # .get(..., {}) guards against older kpis.json reports generated before unitEconomics
+        # existed -- same "degrade gracefully" pattern as the `kpis is None` branch above.
+        ue = kpis["kpis"].get("unitEconomics", {})
+        ue_val = f"{ue['value']:,.4f} {ue['unit']}" if ue.get("value") is not None else "—"
+        kc6.metric("Unit economics", ue_val, ue.get("method") if ue.get("value") is not None else None)
+
         with st.expander("What do these mean / why unavailable?"):
             for name, kpi in kpis["kpis"].items():
                 note = kpi.get("note", "")
-                st.markdown(f"**{KPI_METRIC_LABELS.get(name, name)}** — {note}")
+                st.markdown(f"**{KPI_NOTE_LABELS.get(name, name)}** — {note}")
 
     st.subheader("Trend across runs")
     metric_key = st.selectbox(

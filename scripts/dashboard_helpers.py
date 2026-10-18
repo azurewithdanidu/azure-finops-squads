@@ -75,7 +75,10 @@ def load_kpis(run: Path) -> dict | None:
     return load_json(run / "reports" / "kpis.json")
 
 
-# The 5 named KPIs and the dotted path to each one's numeric value, used by kpi_trend_dataframe.
+# The 5 trendable named KPIs and the dotted path to each one's numeric value, used by
+# kpi_trend_dataframe. unitEconomics is deliberately excluded: its "method" (azure-openai-tokens
+# vs manual-denominator) can change run-to-run, which would make a single trend line compare
+# incompatible units -- it's shown as a headline card in dashboard.py instead, not trended.
 KPI_VALUE_PATHS = {
     "taggingCompliance": ("kpis", "taggingCompliance", "value"),
     "allocationCoverage": ("kpis", "allocationCoverage", "value"),
