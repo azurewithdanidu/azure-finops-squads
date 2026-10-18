@@ -96,18 +96,23 @@ An interactive, read-only [Streamlit](https://streamlit.io) dashboard visualizes
 artifacts, organized into three named tabs (mirroring the Microsoft FinOps Toolkit's own Power BI
 report structure):
 
-- **📊 Cost Summary** — headline estimated/realised savings (grouped by currency; mixed-currency
+- **Cost Summary** — headline estimated/realised savings (grouped by currency; mixed-currency
   runs are never blended into one misleading total), spend by service/trend, or an honest "spend
   data unavailable" banner.
-- **🧹 Waste & Governance** — iteration-goal progress, savings by finding type, risk-tier/status
-  funnels, and the full findings table with evidence.
-- **📈 KPIs & Trends** — a named FinOps KPI set (tagging compliance vs the FinOps Framework's 90%
-  target, allocation coverage, savings opportunity, realised rate, anomaly trend), a run-over-run
-  trend chart, and a run-to-run comparison showing resolved/recurring/new findings.
+- **Waste & Governance** — iteration-goal progress, savings by finding type, risk-tier/status
+  funnels, and the full findings table. Select a row to open a detail view with the summary, key
+  facts and evidence cards.
+- **KPIs & Trends** — a named FinOps KPI set (tagging compliance vs the FinOps Framework's 90%
+  target, allocation coverage, savings opportunity, realised rate, anomaly trend) as cards with
+  run-history sparklines, a run-over-run trend chart, and a run-to-run comparison showing
+  resolved/recurring/new findings.
 
-A sidebar **persona toggle** (Engineering / Leadership) shows the full finding-level detail only to
-Engineering — Leadership sees KPI cards and charts, per the FinOps Framework's own
-persona-differentiated-detail guidance.
+A compact header shows the subscription, run, window, currency and price basis. The run selector
+and the **persona switch** (Engineering / Leadership) sit in a top control row, so the page works
+with the sidebar collapsed. Only Engineering sees the finding-level table and per-finding
+evidence, per the FinOps Framework's persona-differentiated-detail guidance. The look is set by
+`.streamlit/config.toml` (light and dark themes, minimal toolbar) and `scripts/dashboard_theme.py`
+(one palette shared by every chart). Requires Streamlit 1.50 or newer.
 
 ```bash
 pip install -r requirements-dev.txt
@@ -115,7 +120,7 @@ python scripts/kpis.py .finops/runs/<id>/ --runs-dir .finops/runs  # optional, f
 streamlit run scripts/dashboard.py
 ```
 
-Pick a run from the sidebar. The dashboard reads `.finops/runs/<id>/` only — it never calls Azure
+Pick a run from the control row at the top of the page. The dashboard reads `.finops/runs/<id>/` only — it never calls Azure
 and never mutates artifacts, and it keeps estimated and realised savings strictly separate. See
 [docs/scheduling-recurring-runs.md](docs/scheduling-recurring-runs.md) for keeping multiple runs
 accumulating so the trend/comparison views have real data to show.

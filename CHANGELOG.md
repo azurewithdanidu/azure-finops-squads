@@ -8,6 +8,18 @@ All notable changes to **finops-squad** are documented here. The format is based
 
 ### Changed
 
+- **Modernised the dashboard UI (presentation only — no data or calculations changed).** Custom
+  light/dark theme and minimal toolbar in `.streamlit/config.toml`; a single palette and Altair
+  theme in `scripts/dashboard_theme.py` with chart builders in `scripts/dashboard_charts.py`; a
+  compact header with currency/price-basis chips; the run selector and persona switch moved from
+  the sidebar to a top control row; Material icons on tabs; bordered KPI cards with run-history
+  sparklines; consistently labelled and sorted charts, a dashed 90% tagging target and
+  text-plus-colour risk tiers; a `column_config` findings table whose row selection opens a
+  structured detail dialog; mtime-keyed `st.cache_data` file loading; friendlier empty states. In
+  mixed-currency runs the "Estimated saving by type" chart now shows the primary currency only,
+  instead of summing across currencies. Minimum Streamlit raised from 1.40 to 1.50. New pure
+  helpers and an AppTest smoke test are covered in `tests/test_scripts.py`; the dashboard also
+  reads an optional `FINOPS_RUNS_DIR` environment variable.
 - **Restructured the agent roster from 10 agents to 5: Orchestrator, Discovery, Analyser,
   Implementer, Visualizer.** The five previous finding agents (Waste Hunter, Rightsizer, Tagger,
   Commitment Planner, Anomaly Detective) plus the Verifier were each thin wrappers around a single

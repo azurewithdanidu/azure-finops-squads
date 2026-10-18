@@ -94,13 +94,28 @@ synonyms to match the published taxonomy in
 ## Dashboard structure and personas
 
 `scripts/dashboard.py` is organized into three named tabs, mirroring the Microsoft FinOps Toolkit's
-own Power BI report structure rather than one long flat page: **📊 Cost Summary** (headline KPIs,
-spend, estimated-vs-realised), **🧹 Waste & Governance** (iteration progress, savings-by-type,
-tier/status funnels, the full findings table), and **📈 KPIs & Trends** (the named KPI set above,
-its trend across runs, and the cross-run comparison). A sidebar **persona toggle**
-(Engineering / Leadership) reflects the Framework's own guidance that different personas need
-different levels of detail — Leadership sees KPI cards and charts only; Engineering additionally
-sees the raw findings table and per-finding evidence.
+own Power BI report structure rather than one long flat page: **Cost Summary** (headline KPIs,
+spend, estimated-vs-realised), **Waste & Governance** (iteration progress, savings-by-type,
+tier/status funnels, the findings table with a row-selection detail dialog), and **KPIs & Trends**
+(the named KPI set above as cards with sparklines, its trend across runs, and the cross-run
+comparison). A persona switch (Engineering / Leadership) in the top control row reflects the
+Framework's own guidance that different personas need different levels of detail — Leadership
+sees KPI cards and charts only; Engineering additionally sees the findings table and per-finding
+evidence.
+
+Presentation is split so most of it is testable without a Streamlit runtime:
+
+- `.streamlit/config.toml` — the native light/dark theme and minimal toolbar. No custom CSS is used.
+- `scripts/dashboard_theme.py` — design tokens (categorical, semantic and tier colours, chart
+  sizes) and the registered Altair theme.
+- `scripts/dashboard_charts.py` — chart builders that share one height, direct value labels and
+  compact numbers.
+- `scripts/dashboard_helpers.py` — pure helpers, including `md_escape` and `safe_url` for
+  untrusted artifact text, and `run_fingerprint`, which keys the `st.cache_data` loaders on each
+  file's mtime so reruns don't re-read every artifact.
+
+Artifact text (resource names, summaries, tags) is untrusted: the dashboard renders it through
+native components only, never raw HTML, and Markdown-escapes it first.
 
 ## Honest numbers: currency safety
 
