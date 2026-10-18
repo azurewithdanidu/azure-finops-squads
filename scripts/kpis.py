@@ -20,6 +20,18 @@ unnamed totals:
 - anomalyCount                -- count of `type: "anomaly"` findings this run, trended against
                                   the nearest earlier run (Anomaly Management's maturity bar:
                                   persisting the baseline across runs, not just within one).
+- unitEconomics                -- cost-per-unit (Unit Economics capability,
+                                  https://www.finops.org/framework/capabilities/unit-economics/).
+                                  Two methods, tried in order:
+                                    1. azure-openai-tokens: real Azure Monitor GeneratedTokens +
+                                       ProcessedPromptTokens for Azure OpenAI resources (captured by
+                                       Discovery into inventory.usageMetrics.azureOpenAI), divided
+                                       into the matching spend.json AI service-cost line.
+                                    2. manual-denominator: total spend divided by a user-supplied
+                                       business denominator (.finops/config.json's
+                                       unitEconomics.denominator, e.g. per-user or per-transaction).
+                                  Never fabricates a denominator -- "unavailable" when neither
+                                  real usage data nor a configured denominator exists.
 
 Every KPI is computed only from data actually present in the run folder. When the required
 inputs are missing, the KPI reports `"method"/"trend": "unavailable"` and an honest `note`
@@ -260,6 +272,107 @@ def compute_anomaly_kpi(run_folder: Path, runs_dir: Path | None) -> dict:
     }
 
 
+# Service-name substrings that identify an Azure OpenAI spend.json byService line. Matching by
+# name text is an approximation (not a verified per-resource cost allocation) -- see the note
+# emitted alongside the "azure-openai-tokens" method below.
+AI_SERVICE_NAME_CANDIDATES = ["azure openai", "openai"]
+
+
+def _ai_service_spend(spend: dict | None) -> dict | None:
+    for row in (spend or {}).get("byService") or []:
+        name = str(row.get("service", "")).lower()
+        cost = row.get("cost")
+        if any(c in name for c in AI_SERVICE_NAME_CANDIDATES) and isinstance(cost, (int, float)):
+            return {"service": row.get("service"), "cost": cost}
+    return None
+
+
+def _total_openai_tokens(inventory: dict | None) -> tuple[float, int]:
+    """Sum GeneratedTokens + ProcessedPromptTokens across inventory.usageMetrics.azureOpenAI
+    entries (see references/azure-openai-token-metrics.md in the unit-economics skill for the
+    real Azure Monitor metric names this relies on)."""
+    entries = ((inventory or {}).get("usageMetrics") or {}).get("azureOpenAI")
+    if not isinstance(entries, list) or not entries:
+        return 0.0, 0
+    total = 0.0
+    resource_count = 0
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        explicit_total = entry.get("totalTokens")
+        if isinstance(explicit_total, (int, float)):
+            tokens = explicit_total
+        else:
+            tokens = (entry.get("generatedTokens") or 0) + (entry.get("processedPromptTokens") or 0)
+        if isinstance(tokens, (int, float)) and tokens > 0:
+            total += tokens
+            resource_count += 1
+    return total, resource_count
+
+
+def _manual_denominator(run_folder: Path) -> dict | None:
+    config = load_json(run_folder.resolve().parent.parent / "config.json") or {}
+    denom = (config.get("unitEconomics") or {}).get("denominator")
+    if not isinstance(denom, dict):
+        return None
+    label, value = denom.get("label"), denom.get("value")
+    if not label or not isinstance(value, (int, float)) or value <= 0:
+        return None
+    return {"label": str(label), "value": float(value)}
+
+
+def compute_unit_economics(run_folder: Path, inventory: dict | None, spend: dict | None) -> dict:
+    spend_currency = (spend or {}).get("currency") or "AUD"
+
+    # Method 1: Azure OpenAI token-based cost -- only when both a real token capture AND a
+    # matching AI spend line exist. Never used on a guess.
+    total_tokens, resource_count = _total_openai_tokens(inventory)
+    ai_spend = _ai_service_spend(spend)
+    if total_tokens > 0 and ai_spend:
+        cost_per_1k = round((ai_spend["cost"] / total_tokens) * 1000, 4)
+        return {
+            "value": cost_per_1k, "unit": f"{spend_currency}/1K tokens", "method": "azure-openai-tokens",
+            "totalTokens": int(total_tokens),
+            "costBasis": {"service": ai_spend["service"], "cost": ai_spend["cost"], "currency": spend_currency},
+            "note": (
+                f"GeneratedTokens + ProcessedPromptTokens summed across {resource_count} Azure OpenAI "
+                f"resource(s) in inventory.usageMetrics.azureOpenAI, divided into the '{ai_spend['service']}' "
+                "spend.json byService line for the same window. Service-level cost is matched by name, not "
+                "a verified per-resource allocation -- treat as approximate if other AI services share "
+                "that billing line."
+            ),
+        }
+
+    # Method 2: user-supplied business denominator (per-user, per-transaction, per-workload...)
+    # covers the Framework's broader Unit Economics definition without new Azure capability.
+    denom = _manual_denominator(run_folder)
+    total_spend = (spend or {}).get("totalLastMonth")
+    if denom and isinstance(total_spend, (int, float)) and total_spend > 0:
+        cost_per_unit = round(total_spend / denom["value"], 4)
+        return {
+            "value": cost_per_unit, "unit": f"{spend_currency}/{denom['label']}", "method": "manual-denominator",
+            "costBasis": {"totalSpend": total_spend, "currency": spend_currency, "denominator": denom},
+            "note": (
+                "spend.json's totalLastMonth divided by the user-supplied denominator "
+                f"(.finops/config.json unitEconomics.denominator = {denom['value']} {denom['label']}). "
+                "This denominator is not independently verified by the squad -- keep it current."
+            ),
+        }
+
+    missing = []
+    if total_tokens <= 0:
+        missing.append("no Azure OpenAI GeneratedTokens/ProcessedPromptTokens captured in inventory.usageMetrics")
+    elif not ai_spend:
+        missing.append("tokens were captured but no matching AI service spend line was found in spend.json")
+    if not denom:
+        missing.append("no unitEconomics.denominator configured in .finops/config.json")
+    return {
+        "value": None, "unit": None, "method": "unavailable",
+        "note": "Needs either Azure OpenAI usage metrics or a configured business denominator: "
+                + "; ".join(missing) + ".",
+    }
+
+
 def build_kpis(run_folder: Path, runs_dir: Path | None = None) -> dict:
     inventory = load_json(run_folder / "inventory.json")
     spend = load_json(run_folder / "spend.json")
@@ -279,6 +392,7 @@ def build_kpis(run_folder: Path, runs_dir: Path | None = None) -> dict:
             "estimatedSavingsOpportunity": estimated_kpi,
             "realisedSavingsRate": realised_kpi,
             "anomalyCount": compute_anomaly_kpi(run_folder, runs_dir),
+            "unitEconomics": compute_unit_economics(run_folder, inventory, spend),
         },
     }
 
