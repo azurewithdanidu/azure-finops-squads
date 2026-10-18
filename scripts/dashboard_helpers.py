@@ -12,8 +12,80 @@ from pathlib import Path
 import pandas as pd
 
 TIER_ORDER = ["T0", "T1", "T2", "T3"]
-TIER_COLORS = {"T0": "#34a853", "T1": "#4285f4", "T2": "#f9ab00", "T3": "#ea4335"}
 STATUS_ORDER = ["proposed", "approved", "pr-open", "merged", "verified", "rejected"]
+
+# Confidence as text plus a small shape meter (never colour alone).
+CONFIDENCE_LABELS = {"high": "▰▰▰ High", "medium": "▰▰▱ Medium", "low": "▰▱▱ Low"}
+
+
+def confidence_label(value) -> str:
+    return CONFIDENCE_LABELS.get(str(value).lower(), "—" if value in (None, "") else str(value))
+
+
+def compact_number(value, decimals: int = 2) -> str:
+    """Compact display for chart labels: 7.3 -> '7.30', 1234 -> '1.2K', 2_500_000 -> '2.5M'."""
+    try:
+        n = float(value)
+    except (TypeError, ValueError):
+        return "—"
+    sign = "-" if n < 0 else ""
+    n = abs(n)
+    for limit, suffix in ((1e9, "B"), (1e6, "M"), (1e3, "K")):
+        if n >= limit:
+            return f"{sign}{n / limit:.1f}".rstrip("0").rstrip(".") + suffix
+    return f"{sign}{n:.{decimals}f}"
+
+
+_MD_SPECIALS = "\\`*_{}[]()#+-.!|<>~$&:"
+
+
+def md_escape(text) -> str:
+    """Neutralise Markdown/HTML-significant characters in untrusted artifact text so it renders
+    literally (no links, images, emphasis or entities) when passed to st.markdown."""
+    if text is None:
+        return ""
+    return "".join("\\" + ch if ch in _MD_SPECIALS else ch for ch in str(text)).replace("\n", " ")
+
+
+def safe_url(url) -> str | None:
+    """Only http(s) URLs may become clickable links; anything else from an artifact is dropped."""
+    if isinstance(url, str) and url.strip().lower().startswith(("https://", "http://")):
+        return url.strip()
+    return None
+
+
+def money_format(currency, per_row_currency: bool) -> str:
+    """printf-style format for st.column_config.NumberColumn. The currency code comes from an
+    artifact, so only a plain 3-letter code is allowed into the format string ('%' would break
+    it). With mixed currencies the amount is bare and each row carries its own currency column."""
+    code = str(currency or "")
+    if per_row_currency or not (len(code) == 3 and code.isascii() and code.isalpha()):
+        return "%.2f"
+    return f"{code} %.2f"
+
+
+def short_id(value, keep: int = 8) -> str:
+    """Shorten a long identifier (e.g. a subscription GUID) for headers: '40668c14…'."""
+    text = str(value or "—")
+    return text if len(text) <= keep + 1 else text[:keep] + "…"
+
+
+def is_approximate(kpi: dict | None) -> bool:
+    """True when a KPI's method says it is an approximation (e.g. tagCoverageApproximate)."""
+    return "approx" in str((kpi or {}).get("method", "")).lower()
+
+
+def run_fingerprint(run: Path) -> tuple:
+    """(relative path, mtime_ns, size) for every JSON file a run's dashboard view reads, so the
+    cached loaders re-read only when something actually changed on disk."""
+    items = []
+    for sub in ("", "findings", "verification", "reports"):
+        folder = run / sub if sub else run
+        if folder.is_dir():
+            for path in sorted(folder.glob("*.json")):
+                st = path.stat()
+                items.append((f"{sub}/{path.name}", st.st_mtime_ns, st.st_size))
+    return tuple(items)
 
 
 def load_json(path: Path):
@@ -163,6 +235,7 @@ def findings_dataframe(findings: list[dict], verifs: dict[str, dict]) -> pd.Data
                 else 0.0,
                 "resourceId": f.get("resourceId"),
                 "summary": f.get("summary"),
+                "prUrl": safe_url(f.get("prUrl")),
             }
         )
     return pd.DataFrame(rows)

@@ -11,12 +11,16 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import shutil
+import sys
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 REPO = Path(__file__).resolve().parent.parent
 SCRIPTS = REPO / "scripts"
+sys.path.insert(0, str(SCRIPTS))  # dashboard modules import each other by name
 
 
 def _load(module_name: str, filename: str):
@@ -398,3 +402,122 @@ def test_kpi_trend_dataframe_mixed_availability(tmp_path: Path):
     assert list(df["available"]) == [False, False, True]
     assert df.iloc[2]["value"] == 149.81
     assert pd.isna(df.iloc[0]["value"])
+
+
+# ------------------------------------------------- dashboard: presentation helpers and theme
+def test_compact_number():
+    f = dashboard_helpers.compact_number
+    assert f(7.3) == "7.30"
+    assert f(149.81) == "149.81"
+    assert f(1234) == "1.2K"
+    assert f(1000) == "1K"
+    assert f(2_500_000) == "2.5M"
+    assert f(-1500) == "-1.5K"
+    assert f(None) == "—"
+
+
+def test_md_escape_neutralises_markdown_and_html():
+    out = dashboard_helpers.md_escape("[x](http://evil) <img src=x> **b** $a$")
+    for ch in "[]()<>*$":
+        assert out.count(ch) == out.count("\\" + ch), f"unescaped {ch!r} in {out!r}"
+    assert dashboard_helpers.md_escape(None) == ""
+    assert chr(10) not in dashboard_helpers.md_escape("a" + chr(10) + "b")
+
+
+def test_safe_url_allows_only_http_s():
+    assert dashboard_helpers.safe_url("https://github.com/o/r/pull/1") == "https://github.com/o/r/pull/1"
+    assert dashboard_helpers.safe_url("javascript:alert(1)") is None
+    assert dashboard_helpers.safe_url("data:text/html,x") is None
+    assert dashboard_helpers.safe_url(None) is None
+
+
+def test_confidence_label_and_short_id_and_is_approximate():
+    assert dashboard_helpers.confidence_label("high").endswith("High")
+    assert dashboard_helpers.confidence_label(None) == "—"
+    assert dashboard_helpers.short_id("40668c14-2eac-4594-815f-e64abe2a25dd") == "40668c14…"
+    assert dashboard_helpers.short_id("short") == "short"
+    assert dashboard_helpers.is_approximate({"method": "tagCoverageApproximate"})
+    assert not dashboard_helpers.is_approximate({"method": "exact"})
+    assert not dashboard_helpers.is_approximate(None)
+
+
+def test_money_format_rejects_unsafe_currency_codes():
+    assert dashboard_helpers.money_format("AUD", False) == "AUD %.2f"
+    assert dashboard_helpers.money_format("AUD", True) == "%.2f"
+    assert dashboard_helpers.money_format("100%s", False) == "%.2f"
+    assert dashboard_helpers.money_format(None, False) == "%.2f"
+
+
+def test_findings_dataframe_prurl_only_keeps_safe_links():
+    findings = [
+        {"id": "a", "prUrl": "https://example.com/pr/1"},
+        {"id": "b", "prUrl": "javascript:alert(1)"},
+        {"id": "c"},
+    ]
+    df = dashboard_helpers.findings_dataframe(findings, {})
+    assert df["prUrl"].tolist()[0] == "https://example.com/pr/1"
+    assert df["prUrl"].isna().tolist()[1:] == [True, True]
+
+
+def test_run_fingerprint_changes_when_a_file_changes(tmp_path):
+    (tmp_path / "findings").mkdir()
+    (tmp_path / "spend.json").write_text("{}", encoding="utf-8")
+    before = dashboard_helpers.run_fingerprint(tmp_path)
+    assert before == dashboard_helpers.run_fingerprint(tmp_path)
+    (tmp_path / "findings" / "waste.json").write_text("[]", encoding="utf-8")
+    after = dashboard_helpers.run_fingerprint(tmp_path)
+    assert after != before and len(after) == 2
+
+
+def test_theme_tokens_are_consistent():
+    import dashboard_theme as T
+
+    assert len(set(T.CATEGORICAL)) == len(T.CATEGORICAL)
+    assert set(T.TIER_COLORS) == set(T.TIER_LABELS) == {"T0", "T1", "T2", "T3"}
+    # tier labels carry the tier id, so tier is never conveyed by colour alone
+    assert all(k in v for k, v in T.TIER_LABELS.items())
+    T.register_altair_theme()
+    T.register_altair_theme()  # idempotent
+
+
+def test_chart_builders_return_valid_specs():
+    import dashboard_charts as C
+
+    bars = C.hbar_chart(
+        pd.DataFrame({"s": ["a", "b"], "v": [1.0, 5.0]}), "s", "v", ["s", "v"]
+    ).to_dict()
+    assert bars["height"] >= 1
+    vb = C.vbar_chart(pd.DataFrame({"k": ["x"], "n": [2]}), "k", "n", ["x"]).to_dict()
+    assert vb["height"] == 300
+    trend = C.trend_chart(
+        pd.DataFrame({"runId": ["r1", "r2"], "value": [4.0, 5.0]}), ["r1", "r2"], "t", target=90
+    ).to_dict()
+    assert any(layer["mark"].get("strokeDash") for layer in trend["layer"] if isinstance(layer["mark"], dict))
+
+
+# ------------------------------------------------------------- dashboard: AppTest smoke test
+def _dashboard_app(monkeypatch, runs_dir):
+    pytest.importorskip("streamlit.testing.v1")
+    from streamlit.testing.v1 import AppTest
+
+    monkeypatch.setenv("FINOPS_RUNS_DIR", str(runs_dir))
+    return AppTest.from_file(str(SCRIPTS / "dashboard.py"), default_timeout=60)
+
+
+def test_dashboard_renders_with_no_runs(monkeypatch, tmp_path):
+    at = _dashboard_app(monkeypatch, tmp_path / "runs").run()
+    assert not at.exception
+    assert any("No runs found" in m.value for m in at.markdown)
+
+
+@pytest.mark.parametrize("persona", ["Engineering", "Leadership"])
+def test_dashboard_renders_fixture_run(monkeypatch, tmp_path, persona):
+    runs = tmp_path / "runs"
+    shutil.copytree(REPO / "fixtures", runs / "20260101-0000")
+    at = _dashboard_app(monkeypatch, runs).run()
+    assert not at.exception
+    at.session_state["persona"] = persona
+    at.run()
+    assert not at.exception
+    assert len(at.tabs) == 3
+    assert any(m.label == "Findings" for m in at.metric)
