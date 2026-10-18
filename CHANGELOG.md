@@ -8,6 +8,18 @@ All notable changes to **finops-squad** are documented here. The format is based
 
 ### Changed
 
+- **Made the dashboard's two personas genuinely different (Executive vs Engineering), built from
+  the same data.** `scripts/dashboard.py` now loads a run into one `RunContext` and calls
+  `render_executive` (`scripts/dashboard_exec.py`) or `render_engineering`
+  (`scripts/dashboard_eng.py`). **Executive** is a single plain-English page — headline sentence,
+  four KPI cards, top 5 cost drivers, decisions needed, goal progress, a reliability note and the
+  executive summary with a download button — with no finding ids, tier codes, IaC details or
+  resource ids. **Engineering** has Work queue / Spend / Governance / History & data quality tabs,
+  an action-bucket filter and a finding detail view with the evidence's tool and query, an Azure
+  Portal link and a rule-based blocker and next step. The "Leadership" persona label is now
+  "Executive". The view and run are synced to `?view=executive|engineering&run=<run id>`. New
+  `classify_finding` action buckets and `TYPE_LABELS` in `scripts/dashboard_helpers.py`, and shared
+  pure logic in `scripts/dashboard_insights.py`, keep both views' numbers identical.
 - **Modernised the dashboard UI (presentation only — no data or calculations changed).** Custom
   light/dark theme and minimal toolbar in `.streamlit/config.toml`; a single palette and Altair
   theme in `scripts/dashboard_theme.py` with chart builders in `scripts/dashboard_charts.py`; a
