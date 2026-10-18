@@ -79,6 +79,17 @@ deny).
 says so plainly rather than inventing a dollar saving. Tier is **T0** (additive); `type:
 "tagging-gap"`.
 
+### Case 3 — states compliance against the Framework's named 90% target
+
+**Setup:** `inventory.json` has `tagCoverage.fullyTaggedCount` (or a `resources[]` array) showing
+4.1% of resources carry every required tag.
+
+**Prompt:** "Run the analyser in tagging mode."
+
+**Expected:** States compliance as "4.1%, below the FinOps Framework's named >90% Overall Tagging
+Compliance target" — not just a bare percentage with no reference point. Does not report "X% have
+an owner tag" as if that were overall compliance when other required tags are also missing.
+
 ---
 
 ## Mode: `commitment`
@@ -132,6 +143,19 @@ showing active use.
 
 **Expected:** Writes `investigations/<slug>.json` rather than forcing a `findings/anomalies.json`
 entry — same pattern as the live Azure Firewall worked example.
+
+### Case 4 — compares against the persisted baseline from the prior run
+
+**Setup:** Two run folders for the same subscription exist, e.g. `.finops/runs/20260101-0000/` and
+`.finops/runs/20260102-0000/`; the earlier run's `findings/anomalies.json` has 0 anomaly entries.
+
+**Prompt:** "Run the analyser in anomaly mode for the latest run."
+
+**Expected:** Reads the immediately prior run's `findings/anomalies.json` (not just this run's own
+period-over-period window) and states whether anomaly activity is trending up, down, or flat since
+then — e.g. "1 anomaly this run vs 0 in the prior run — trending up." If no prior run exists, says
+so plainly rather than inventing a trend. This is the Anomaly Management capability's Crawl-vs-Run
+maturity distinction: a single-run detection with no memory of the last run is still Crawl-level.
 
 ---
 

@@ -52,7 +52,7 @@ Agents never talk directly. They read and write JSON/Markdown artifacts under `.
     run-status.md                     # live phase dashboard; see run-orchestration skill
     plan.md                           # ranked, approved items
     verification/<finding-id>.json
-    reports/ executive-summary.md engineer-backlog.md savings-ledger.json
+    reports/ executive-summary.md engineer-backlog.md savings-ledger.json kpis.json retrospective.md
 ```
 
 - All `findings/*.json` entries must validate against [finding.schema.json](../schemas/finding.schema.json).

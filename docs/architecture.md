@@ -63,11 +63,44 @@ plain one-off scan behaves identically whether or not a brief exists.
   `.github/instructions/*.instructions.md` (Bicep authoring, `.finops/**` artifacts).
 - **Schemas** — `schemas/finding.schema.json`, `schemas/verification.schema.json`.
 - **Scripts** — `scripts/validate-findings.py` (schema gate), `scripts/ledger.py` (savings ledger,
-  grouped by currency — see Honest numbers below), `scripts/dashboard.py` (interactive Streamlit
-  visualizer; its pure/IO logic lives in `scripts/dashboard_helpers.py` so it's unit-testable
-  without a Streamlit runtime — see `tests/test_scripts.py`).
+  grouped by currency — see Honest numbers below), `scripts/kpis.py` (named FinOps KPI set — see
+  below), `scripts/dashboard.py` (interactive Streamlit visualizer, organized into named tabs; its
+  pure/IO logic lives in `scripts/dashboard_helpers.py` so it's unit-testable without a Streamlit
+  runtime — see `tests/test_scripts.py`).
 - **Fixtures** — `fixtures/` sample data for offline testing without a live tenant;
   `tests/fixtures/mixed_currency/` specifically exercises the never-blend-currencies rule.
+
+## Named KPIs (FinOps Foundation alignment)
+
+Per the FinOps Framework's [KPIs & Benchmarking](https://www.finops.org/framework/capabilities/kpis-benchmarking/)
+capability ("a curated, well-documented set of KPIs... regularly reviewed for relevance" — not raw,
+unnamed totals), `scripts/kpis.py` computes a small, named set into `reports/kpis.json`:
+
+| KPI | Source capability | Honesty rule |
+|---|---|---|
+| `taggingCompliance` | Reporting & Analytics' named >90% target | `method: "unavailable"` with a `note`, never guessed, when `inventory.json` lacks tag data |
+| `allocationCoverage` | Reporting & Analytics' allocated/unallocated spend output | Same — needs both a spend breakdown and resource-group tags |
+| `estimatedSavingsOpportunity` | Reuses `scripts/ledger.py`'s primary-currency total | Notes explicitly when the run is mixed-currency |
+| `realisedSavingsRate` | realised ÷ estimated, as a % | A true `0%` (not "unavailable") when nothing is estimated yet |
+| `anomalyCount` | Anomaly Management's maturity bar (persisted baseline, not single-run detection) | `trend: "unavailable"` with no earlier run to compare against |
+
+`scripts/dashboard.py`'s **📈 KPIs & Trends** tab renders these as metric cards plus a run-over-run
+trend chart (`dashboard_helpers.kpi_trend_dataframe`), alongside the cross-run comparison described
+below. `.finops/config.json`'s optional `tagging.requiredTags` controls which tags count toward
+compliance (default `owner`/`environment`/`application`, with `env`/`environment` treated as
+synonyms to match the published taxonomy in
+[tagging-policy-design](../.github/skills/tagging-policy-design/SKILL.md)).
+
+## Dashboard structure and personas
+
+`scripts/dashboard.py` is organized into three named tabs, mirroring the Microsoft FinOps Toolkit's
+own Power BI report structure rather than one long flat page: **📊 Cost Summary** (headline KPIs,
+spend, estimated-vs-realised), **🧹 Waste & Governance** (iteration progress, savings-by-type,
+tier/status funnels, the full findings table), and **📈 KPIs & Trends** (the named KPI set above,
+its trend across runs, and the cross-run comparison). A sidebar **persona toggle**
+(Engineering / Leadership) reflects the Framework's own guidance that different personas need
+different levels of detail — Leadership sees KPI cards and charts only; Engineering additionally
+sees the raw findings table and per-finding evidence.
 
 ## Honest numbers: currency safety
 
@@ -80,7 +113,8 @@ totals. `scripts/dashboard.py` checks `mixedCurrencies` and shows a per-currency
 of a misleading single total whenever it's set. The dashboard also supports comparing two runs
 (matching findings by `type` + `resourceId`, not by the per-run `id`) to show what's resolved,
 recurring, or new since an earlier assessment — see `compare_runs` in
-`scripts/dashboard_helpers.py`.
+`scripts/dashboard_helpers.py`. See [scheduling-recurring-runs.md](./scheduling-recurring-runs.md)
+for how to keep multiple runs accumulating so these trend/comparison views have real data.
 
 ## Capability contract
 

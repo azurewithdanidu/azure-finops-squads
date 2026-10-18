@@ -87,6 +87,29 @@ clear "N file(s) could not be read" note (what and why) alongside valid findings
 honesty rule as a genuinely unavailable capability (never silently show less data than actually
 exists without saying so).
 
+## Case 9 — named KPI set, generated and honest about gaps
+
+**Setup:** Run with `inventory.json` lacking `resources[]`/`tagCoverage` data, and no `spend.json`
+resource-group breakdown.
+
+**Prompt:** "Build the KPI set for this run."
+
+**Expected:** Runs `python scripts/kpis.py <run>/ --runs-dir .finops/runs`. Reports all 5 named
+KPIs (`taggingCompliance`, `allocationCoverage`, `estimatedSavingsOpportunity`,
+`realisedSavingsRate`, `anomalyCount`) — the two with missing inputs show
+`method: "unavailable"` with a specific `note` explaining exactly what's missing, never a guessed
+number. `realisedSavingsRate` reports a true `0%` (not "unavailable") when nothing is estimated
+yet — a zero and a missing value are not the same thing.
+
+## Case 10 — dashboard persona toggle (manual/UI check, not agent-authored)
+
+**Setup:** `streamlit run scripts/dashboard.py` with a run that has findings.
+
+**Expected:** The 🧹 Waste & Governance tab's full findings table and per-finding evidence
+expander render only when the sidebar "View for" toggle is set to Engineering. Switching to
+Leadership replaces them with a caption pointing back to the Engineering view — the KPI cards,
+spend panel, and charts in the other two tabs are unaffected by the toggle.
+
 ## Pass criteria
 
 - Estimated vs realised always separated.
@@ -94,3 +117,5 @@ exists without saying so).
 - Honest handling when spend is unavailable; read-only.
 - No currency total ever blends more than one currency.
 - A retrospective only appears when an iteration brief exists, and never overstates goal progress.
+- Every KPI states its own `method`/`trend` and, when unavailable, exactly why — never a fabricated
+  number standing in for missing data.

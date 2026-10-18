@@ -91,6 +91,14 @@ After PRs merge and a settling period (≥ 7 days, allowing ~3 days of cost-data
 **verify-savings** prompt. The Analyser (in `verify` mode) records realised savings and the
 Visualizer refreshes the ledger.
 
+## 8. Make it recurring (optional)
+
+A single audit is a snapshot; running it on a schedule turns the dashboard's KPI trend and
+cross-run comparison panels into something genuinely useful. See
+[scheduling-recurring-runs.md](./scheduling-recurring-runs.md) for a cron/Task Scheduler recipe —
+it never shortens the confirmation gate before remediation, only how often the read-only
+assessment itself refreshes.
+
 ## Troubleshooting
 
 - **No spend numbers / "spend data unavailable"** — Discovery attempts `arm.query_costs` first;

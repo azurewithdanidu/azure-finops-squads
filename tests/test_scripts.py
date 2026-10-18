@@ -13,6 +13,8 @@ import importlib.util
 import json
 from pathlib import Path
 
+import pandas as pd
+
 REPO = Path(__file__).resolve().parent.parent
 SCRIPTS = REPO / "scripts"
 
@@ -342,3 +344,57 @@ def test_kpis_mixed_currency_run_notes_it_in_estimated_savings():
     result = kpis.build_kpis(REPO / "tests" / "fixtures" / "mixed_currency", runs_dir=None)
     assert result["mixedCurrencies"] is True
     assert "mixes currencies" in result["kpis"]["estimatedSavingsOpportunity"]["note"]
+
+
+# ----------------------------------------------------------------- dashboard_helpers: KPIs
+
+def test_load_kpis_missing_is_none(tmp_path: Path):
+    assert dashboard_helpers.load_kpis(tmp_path) is None
+
+
+def test_load_kpis_present(tmp_path: Path):
+    reports = tmp_path / "reports"
+    reports.mkdir()
+    (reports / "kpis.json").write_text(
+        json.dumps({"kpis": {"estimatedSavingsOpportunity": {"value": 42.0}}}), encoding="utf-8"
+    )
+    loaded = dashboard_helpers.load_kpis(tmp_path)
+    assert loaded is not None
+    assert loaded["kpis"]["estimatedSavingsOpportunity"]["value"] == 42.0
+
+
+def _write_kpis(run_dir: Path, metric: str, value):
+    reports = run_dir / "reports"
+    reports.mkdir(parents=True, exist_ok=True)
+    (reports / "kpis.json").write_text(
+        json.dumps({"kpis": {metric: {"value": value}}}), encoding="utf-8"
+    )
+
+
+def test_kpi_trend_dataframe_rejects_unknown_metric(tmp_path: Path):
+    try:
+        dashboard_helpers.kpi_trend_dataframe([tmp_path], "notARealMetric")
+        assert False, "expected ValueError"
+    except ValueError:
+        pass
+
+
+def test_kpi_trend_dataframe_mixed_availability(tmp_path: Path):
+    run_a = tmp_path / "20260101-0000"
+    run_b = tmp_path / "20260102-0000"
+    run_c = tmp_path / "20260103-0000"
+    run_a.mkdir()
+    run_b.mkdir()
+    run_c.mkdir()
+    # run_a: no kpis.json at all. run_b: kpis.json present but this metric is null.
+    # run_c: kpis.json present with a real value.
+    _write_kpis(run_b, "estimatedSavingsOpportunity", None)
+    _write_kpis(run_c, "estimatedSavingsOpportunity", 149.81)
+
+    df = dashboard_helpers.kpi_trend_dataframe(
+        [run_a, run_b, run_c], "estimatedSavingsOpportunity"
+    )
+    assert list(df["runId"]) == ["20260101-0000", "20260102-0000", "20260103-0000"]
+    assert list(df["available"]) == [False, False, True]
+    assert df.iloc[2]["value"] == 149.81
+    assert pd.isna(df.iloc[0]["value"])

@@ -71,10 +71,11 @@ Agents communicate through schema-valid artifacts under `.finops/` (git-ignored)
   instructions/                  # bicep + .finops/** targeted rules
 .vscode/mcp.json.example         # MCP config template (git-ignored once copied)
 schemas/                         # finding + verification JSON Schemas
-scripts/                         # validate-findings.py, ledger.py, dashboard.py, dashboard_helpers.py
+scripts/                         # validate-findings.py, ledger.py, kpis.py, dashboard.py, dashboard_helpers.py
 fixtures/                        # offline sample data
 docs/                            # architecture, capability map, tool inventory, risk tiers,
-                                 # security model, getting started, config example
+                                 # security model, getting started, config example,
+                                 # scheduling recurring runs, skill authoring guide
 ```
 
 ## Quick start
@@ -92,19 +93,32 @@ Full walkthrough: [docs/getting-started.md](docs/getting-started.md).
 ## Dashboard
 
 An interactive, read-only [Streamlit](https://streamlit.io) dashboard visualizes any run's
-artifacts — estimated vs realised savings (grouped by currency; mixed-currency runs are never
-blended into one misleading total), savings by type, findings by risk tier, a status funnel, a
-sortable findings table with evidence, spend trend (or an honest "spend data unavailable" banner),
-optional iteration-goal progress, and a run-to-run comparison showing resolved/recurring/new
-findings.
+artifacts, organized into three named tabs (mirroring the Microsoft FinOps Toolkit's own Power BI
+report structure):
+
+- **📊 Cost Summary** — headline estimated/realised savings (grouped by currency; mixed-currency
+  runs are never blended into one misleading total), spend by service/trend, or an honest "spend
+  data unavailable" banner.
+- **🧹 Waste & Governance** — iteration-goal progress, savings by finding type, risk-tier/status
+  funnels, and the full findings table with evidence.
+- **📈 KPIs & Trends** — a named FinOps KPI set (tagging compliance vs the FinOps Framework's 90%
+  target, allocation coverage, savings opportunity, realised rate, anomaly trend), a run-over-run
+  trend chart, and a run-to-run comparison showing resolved/recurring/new findings.
+
+A sidebar **persona toggle** (Engineering / Leadership) shows the full finding-level detail only to
+Engineering — Leadership sees KPI cards and charts, per the FinOps Framework's own
+persona-differentiated-detail guidance.
 
 ```bash
 pip install -r requirements-dev.txt
+python scripts/kpis.py .finops/runs/<id>/ --runs-dir .finops/runs  # optional, for the KPI tab
 streamlit run scripts/dashboard.py
 ```
 
 Pick a run from the sidebar. The dashboard reads `.finops/runs/<id>/` only — it never calls Azure
-and never mutates artifacts, and it keeps estimated and realised savings strictly separate.
+and never mutates artifacts, and it keeps estimated and realised savings strictly separate. See
+[docs/scheduling-recurring-runs.md](docs/scheduling-recurring-runs.md) for keeping multiple runs
+accumulating so the trend/comparison views have real data to show.
 
 ## Status
 
