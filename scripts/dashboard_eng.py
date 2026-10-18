@@ -8,8 +8,10 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
+import charts
 import dashboard_insights as I
 import dashboard_theme as T
+import spend_daily as sd
 from dashboard_charts import hbar_chart, month_line_chart, trend_chart, vbar_chart
 from dashboard_helpers import (
     BUCKET_LABELS,
@@ -252,6 +254,74 @@ def _work_queue(ctx: RunContext) -> None:
 
 
 # ------------------------------------------------------------------------------ Spend tab
+def _daily_section(ctx: RunContext) -> None:
+    st.subheader("Daily spend")
+    daily = sd.get_daily(ctx.spend)
+    if daily is None:
+        empty_state(
+            "Daily data not captured — re-run Discovery",
+            "spend.json has no `daily` series. Re-run Discovery (it makes one extra Daily-grain "
+            "`arm.query_costs` call) or run `python scripts/validate_discovery.py "
+            ".finops/runs/<id>/` to see what is missing.",
+            ":material/show_chart:",
+        )
+        return
+    note = I.reconcile_message(sd.reconcile(ctx.spend), daily.get("currency"))
+    if note and note[0] == "warning":
+        st.warning(md_escape(note[1]), icon=":material/rule:")
+    elif note:
+        st.caption(md_escape(note[1]))
+    if daily.get("truncated"):
+        st.warning(
+            "The daily query hit its row limit, so the series may be incomplete.",
+            icon=":material/warning:",
+        )
+
+    order = sd.service_order(daily)
+    left, right = st.columns([3, 1])
+    chosen = left.multiselect("Services", order, default=order, key="daily_services")
+    style = right.segmented_control("Chart", ["Stacked", "Lines"], default="Stacked", key="daily_style")
+    if not chosen:
+        empty_state(
+            "No services selected",
+            "Pick at least one service above to draw the chart.",
+            ":material/filter_alt_off:",
+        )
+        return
+    events = charts.events_for_services(ctx.events.get("events", []), chosen)
+    with st.container(border=True):
+        st.caption(
+            "Dashed rules mark events; the shaded band is the last three days, still settling. "
+            "Hover for exact values."
+        )
+        if style == "Lines":
+            chart(charts.lines_chart(daily, events, chosen, theme=ctx.mode))
+            st.caption("Dark line: 7-day rolling mean of the total across all services.")
+        else:
+            chart(charts.stacked_area_chart(daily, events, chosen, theme=ctx.mode))
+
+    st.markdown("**Events**")
+    if events:
+        st.dataframe(
+            charts.events_table_frame(events),
+            width="stretch",
+            hide_index=True,
+            column_config={
+                "Before / day": st.column_config.NumberColumn(format="%.2f"),
+                "After / day": st.column_config.NumberColumn(format="%.2f"),
+            },
+        )
+    else:
+        empty_state(
+            "No events detected",
+            "No service stopped, started, shifted or spiked in the settled days. You can add your "
+            "own notes in .finops/events.json.",
+            ":material/event_available:",
+        )
+    for w in ctx.events.get("warnings", []):
+        st.caption(md_escape(w))
+
+
 def _spend(ctx: RunContext) -> None:
     spend = ctx.spend
     spend_currency = spend.get("currency", ctx.currency)
@@ -268,6 +338,8 @@ def _spend(ctx: RunContext) -> None:
             icon=":material/cloud_off:",
         )
         return
+
+    _daily_section(ctx)
 
     by_service = spend.get("byService")
     has_service = (

@@ -14,7 +14,9 @@ from urllib.parse import quote
 
 import pandas as pd
 
+import spend_daily as sd
 from dashboard_helpers import BUCKETS, classify_finding
+from spend_events import describe_event
 
 CURRENCY_SYMBOLS = {"AUD": "A$", "NZD": "NZ$", "CAD": "C$", "GBP": "£", "EUR": "€"}
 
@@ -372,3 +374,37 @@ def read_text_file(path: Path, limit: int = 200_000) -> str | None:
 def window_label(start: date | None, end: date | None) -> str:
     return f"{pretty_date(start)} to {pretty_date(end)}" if start and end else "—"
 
+
+
+# ----------------------------------------------------------------------------- daily spend
+def event_sentence(event: dict) -> str:
+    """One plain-English line for a spend event, e.g. '11 Sep 2026 — Application Gateway charges
+    stopped (it had been about USD 13.70 a day)'. Amounts are in the event's own currency."""
+    kind, cur = event.get("kind"), event.get("currency")
+    before, after = event.get("before"), event.get("after")
+    detail = ""
+    if kind == "stopped" and before is not None:
+        detail = f" (it had been about {money_text(cur, before)} a day)"
+    elif kind == "started" and after is not None:
+        detail = f" (now about {money_text(cur, after)} a day)"
+    elif kind == "step-change" and before is not None and after is not None:
+        detail = f" (from about {money_text(cur, before)} to about {money_text(cur, after)} a day)"
+    elif kind == "spike" and before is not None and after is not None:
+        detail = f" ({money_text(cur, after)} on the day, against about {money_text(cur, before)} normally)"
+    return f"{pretty_date(event.get('date'))} — {describe_event(event)}{detail}"
+
+
+def reconcile_message(rec: dict, currency: str | None) -> tuple[str, str] | None:
+    """('warning' | 'info', text) when the daily series disagrees with, or could not be checked
+    against, the period total; None when it reconciles or there is no daily data at all."""
+    if rec.get("status") == "mismatch":
+        return (
+            "warning",
+            f"The daily figures add up to {money_text(currency, rec['dailySum'])} but the period "
+            f"total is {money_text(currency, rec['aggregateTotal'])} ({rec['deltaPct']}% apart, "
+            f"more than the {sd.RECONCILE_TOLERANCE:.0%} tolerance). Re-run Discovery with the "
+            "same window and metric for both calls.",
+        )
+    if rec.get("status") == "skipped" and rec.get("reason") not in ("", "no daily data", None):
+        return ("info", f"The daily figures were not checked against the period total: {rec['reason']}.")
+    return None
