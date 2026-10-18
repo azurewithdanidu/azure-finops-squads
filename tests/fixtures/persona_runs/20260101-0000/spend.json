@@ -48,5 +48,994 @@
       "resourceGroup": "app-rg",
       "cost": 500.0
     }
-  ]
+  ],
+  "daily": {
+    "granularity": "Daily",
+    "groupBy": "ServiceName",
+    "metric": "Cost",
+    "currency": "USD",
+    "from": "2025-12-02",
+    "to": "2025-12-31",
+    "provisionalFrom": "2025-12-29",
+    "truncated": false,
+    "series": [
+      {
+        "date": "2025-12-02",
+        "service": "Azure Firewall",
+        "cost": 30.0
+      },
+      {
+        "date": "2025-12-02",
+        "service": "Virtual Machines",
+        "cost": 20.0
+      },
+      {
+        "date": "2025-12-02",
+        "service": "Application Gateway",
+        "cost": 14.2857
+      },
+      {
+        "date": "2025-12-02",
+        "service": "Storage",
+        "cost": 4.0
+      },
+      {
+        "date": "2025-12-02",
+        "service": "Key Vault",
+        "cost": 1.3333
+      },
+      {
+        "date": "2025-12-02",
+        "service": "DNS",
+        "cost": 0.3333
+      },
+      {
+        "date": "2025-12-03",
+        "service": "Azure Firewall",
+        "cost": 30.0
+      },
+      {
+        "date": "2025-12-03",
+        "service": "Virtual Machines",
+        "cost": 20.0
+      },
+      {
+        "date": "2025-12-03",
+        "service": "Application Gateway",
+        "cost": 14.2857
+      },
+      {
+        "date": "2025-12-03",
+        "service": "Storage",
+        "cost": 4.0
+      },
+      {
+        "date": "2025-12-03",
+        "service": "Key Vault",
+        "cost": 1.3333
+      },
+      {
+        "date": "2025-12-03",
+        "service": "DNS",
+        "cost": 0.3333
+      },
+      {
+        "date": "2025-12-04",
+        "service": "Azure Firewall",
+        "cost": 30.0
+      },
+      {
+        "date": "2025-12-04",
+        "service": "Virtual Machines",
+        "cost": 20.0
+      },
+      {
+        "date": "2025-12-04",
+        "service": "Application Gateway",
+        "cost": 14.2857
+      },
+      {
+        "date": "2025-12-04",
+        "service": "Storage",
+        "cost": 4.0
+      },
+      {
+        "date": "2025-12-04",
+        "service": "Key Vault",
+        "cost": 1.3333
+      },
+      {
+        "date": "2025-12-04",
+        "service": "DNS",
+        "cost": 0.3333
+      },
+      {
+        "date": "2025-12-05",
+        "service": "Azure Firewall",
+        "cost": 30.0
+      },
+      {
+        "date": "2025-12-05",
+        "service": "Virtual Machines",
+        "cost": 20.0
+      },
+      {
+        "date": "2025-12-05",
+        "service": "Application Gateway",
+        "cost": 14.2857
+      },
+      {
+        "date": "2025-12-05",
+        "service": "Storage",
+        "cost": 4.0
+      },
+      {
+        "date": "2025-12-05",
+        "service": "Key Vault",
+        "cost": 1.3333
+      },
+      {
+        "date": "2025-12-05",
+        "service": "DNS",
+        "cost": 0.3333
+      },
+      {
+        "date": "2025-12-06",
+        "service": "Azure Firewall",
+        "cost": 30.0
+      },
+      {
+        "date": "2025-12-06",
+        "service": "Virtual Machines",
+        "cost": 20.0
+      },
+      {
+        "date": "2025-12-06",
+        "service": "Application Gateway",
+        "cost": 14.2857
+      },
+      {
+        "date": "2025-12-06",
+        "service": "Storage",
+        "cost": 4.0
+      },
+      {
+        "date": "2025-12-06",
+        "service": "Key Vault",
+        "cost": 1.3333
+      },
+      {
+        "date": "2025-12-06",
+        "service": "DNS",
+        "cost": 0.3333
+      },
+      {
+        "date": "2025-12-07",
+        "service": "Azure Firewall",
+        "cost": 30.0
+      },
+      {
+        "date": "2025-12-07",
+        "service": "Virtual Machines",
+        "cost": 20.0
+      },
+      {
+        "date": "2025-12-07",
+        "service": "Application Gateway",
+        "cost": 14.2857
+      },
+      {
+        "date": "2025-12-07",
+        "service": "Storage",
+        "cost": 4.0
+      },
+      {
+        "date": "2025-12-07",
+        "service": "Key Vault",
+        "cost": 1.3333
+      },
+      {
+        "date": "2025-12-07",
+        "service": "DNS",
+        "cost": 0.3333
+      },
+      {
+        "date": "2025-12-08",
+        "service": "Azure Firewall",
+        "cost": 30.0
+      },
+      {
+        "date": "2025-12-08",
+        "service": "Virtual Machines",
+        "cost": 20.0
+      },
+      {
+        "date": "2025-12-08",
+        "service": "Application Gateway",
+        "cost": 14.2857
+      },
+      {
+        "date": "2025-12-08",
+        "service": "Storage",
+        "cost": 4.0
+      },
+      {
+        "date": "2025-12-08",
+        "service": "Key Vault",
+        "cost": 1.3333
+      },
+      {
+        "date": "2025-12-08",
+        "service": "DNS",
+        "cost": 0.3333
+      },
+      {
+        "date": "2025-12-09",
+        "service": "Azure Firewall",
+        "cost": 30.0
+      },
+      {
+        "date": "2025-12-09",
+        "service": "Virtual Machines",
+        "cost": 20.0
+      },
+      {
+        "date": "2025-12-09",
+        "service": "Application Gateway",
+        "cost": 14.2857
+      },
+      {
+        "date": "2025-12-09",
+        "service": "Storage",
+        "cost": 4.0
+      },
+      {
+        "date": "2025-12-09",
+        "service": "Key Vault",
+        "cost": 1.3333
+      },
+      {
+        "date": "2025-12-09",
+        "service": "DNS",
+        "cost": 0.3333
+      },
+      {
+        "date": "2025-12-10",
+        "service": "Azure Firewall",
+        "cost": 30.0
+      },
+      {
+        "date": "2025-12-10",
+        "service": "Virtual Machines",
+        "cost": 20.0
+      },
+      {
+        "date": "2025-12-10",
+        "service": "Application Gateway",
+        "cost": 14.2857
+      },
+      {
+        "date": "2025-12-10",
+        "service": "Storage",
+        "cost": 4.0
+      },
+      {
+        "date": "2025-12-10",
+        "service": "Key Vault",
+        "cost": 1.3333
+      },
+      {
+        "date": "2025-12-10",
+        "service": "DNS",
+        "cost": 0.3333
+      },
+      {
+        "date": "2025-12-11",
+        "service": "Azure Firewall",
+        "cost": 30.0
+      },
+      {
+        "date": "2025-12-11",
+        "service": "Virtual Machines",
+        "cost": 20.0
+      },
+      {
+        "date": "2025-12-11",
+        "service": "Application Gateway",
+        "cost": 14.2857
+      },
+      {
+        "date": "2025-12-11",
+        "service": "Storage",
+        "cost": 4.0
+      },
+      {
+        "date": "2025-12-11",
+        "service": "Key Vault",
+        "cost": 1.3333
+      },
+      {
+        "date": "2025-12-11",
+        "service": "DNS",
+        "cost": 0.3333
+      },
+      {
+        "date": "2025-12-12",
+        "service": "Azure Firewall",
+        "cost": 30.0
+      },
+      {
+        "date": "2025-12-12",
+        "service": "Virtual Machines",
+        "cost": 20.0
+      },
+      {
+        "date": "2025-12-12",
+        "service": "Application Gateway",
+        "cost": 14.2857
+      },
+      {
+        "date": "2025-12-12",
+        "service": "Storage",
+        "cost": 4.0
+      },
+      {
+        "date": "2025-12-12",
+        "service": "Key Vault",
+        "cost": 1.3333
+      },
+      {
+        "date": "2025-12-12",
+        "service": "DNS",
+        "cost": 0.3333
+      },
+      {
+        "date": "2025-12-13",
+        "service": "Azure Firewall",
+        "cost": 30.0
+      },
+      {
+        "date": "2025-12-13",
+        "service": "Virtual Machines",
+        "cost": 20.0
+      },
+      {
+        "date": "2025-12-13",
+        "service": "Application Gateway",
+        "cost": 14.2857
+      },
+      {
+        "date": "2025-12-13",
+        "service": "Storage",
+        "cost": 4.0
+      },
+      {
+        "date": "2025-12-13",
+        "service": "Key Vault",
+        "cost": 1.3333
+      },
+      {
+        "date": "2025-12-13",
+        "service": "DNS",
+        "cost": 0.3333
+      },
+      {
+        "date": "2025-12-14",
+        "service": "Azure Firewall",
+        "cost": 30.0
+      },
+      {
+        "date": "2025-12-14",
+        "service": "Virtual Machines",
+        "cost": 20.0
+      },
+      {
+        "date": "2025-12-14",
+        "service": "Application Gateway",
+        "cost": 14.2857
+      },
+      {
+        "date": "2025-12-14",
+        "service": "Storage",
+        "cost": 4.0
+      },
+      {
+        "date": "2025-12-14",
+        "service": "Key Vault",
+        "cost": 1.3333
+      },
+      {
+        "date": "2025-12-14",
+        "service": "DNS",
+        "cost": 0.3333
+      },
+      {
+        "date": "2025-12-15",
+        "service": "Azure Firewall",
+        "cost": 30.0
+      },
+      {
+        "date": "2025-12-15",
+        "service": "Virtual Machines",
+        "cost": 20.0
+      },
+      {
+        "date": "2025-12-15",
+        "service": "Application Gateway",
+        "cost": 14.2857
+      },
+      {
+        "date": "2025-12-15",
+        "service": "Storage",
+        "cost": 4.0
+      },
+      {
+        "date": "2025-12-15",
+        "service": "Key Vault",
+        "cost": 1.3333
+      },
+      {
+        "date": "2025-12-15",
+        "service": "DNS",
+        "cost": 0.3333
+      },
+      {
+        "date": "2025-12-16",
+        "service": "Azure Firewall",
+        "cost": 30.0
+      },
+      {
+        "date": "2025-12-16",
+        "service": "Virtual Machines",
+        "cost": 20.0
+      },
+      {
+        "date": "2025-12-16",
+        "service": "Application Gateway",
+        "cost": 14.2857
+      },
+      {
+        "date": "2025-12-16",
+        "service": "Storage",
+        "cost": 4.0
+      },
+      {
+        "date": "2025-12-16",
+        "service": "Key Vault",
+        "cost": 1.3333
+      },
+      {
+        "date": "2025-12-16",
+        "service": "DNS",
+        "cost": 0.3333
+      },
+      {
+        "date": "2025-12-17",
+        "service": "Azure Firewall",
+        "cost": 30.0
+      },
+      {
+        "date": "2025-12-17",
+        "service": "Virtual Machines",
+        "cost": 20.0
+      },
+      {
+        "date": "2025-12-17",
+        "service": "Application Gateway",
+        "cost": 14.2857
+      },
+      {
+        "date": "2025-12-17",
+        "service": "Storage",
+        "cost": 4.0
+      },
+      {
+        "date": "2025-12-17",
+        "service": "Key Vault",
+        "cost": 1.3333
+      },
+      {
+        "date": "2025-12-17",
+        "service": "DNS",
+        "cost": 0.3333
+      },
+      {
+        "date": "2025-12-18",
+        "service": "Azure Firewall",
+        "cost": 30.0
+      },
+      {
+        "date": "2025-12-18",
+        "service": "Virtual Machines",
+        "cost": 20.0
+      },
+      {
+        "date": "2025-12-18",
+        "service": "Application Gateway",
+        "cost": 14.2857
+      },
+      {
+        "date": "2025-12-18",
+        "service": "Storage",
+        "cost": 4.0
+      },
+      {
+        "date": "2025-12-18",
+        "service": "Key Vault",
+        "cost": 1.3333
+      },
+      {
+        "date": "2025-12-18",
+        "service": "DNS",
+        "cost": 0.3333
+      },
+      {
+        "date": "2025-12-19",
+        "service": "Azure Firewall",
+        "cost": 30.0
+      },
+      {
+        "date": "2025-12-19",
+        "service": "Virtual Machines",
+        "cost": 20.0
+      },
+      {
+        "date": "2025-12-19",
+        "service": "Application Gateway",
+        "cost": 14.2857
+      },
+      {
+        "date": "2025-12-19",
+        "service": "Storage",
+        "cost": 4.0
+      },
+      {
+        "date": "2025-12-19",
+        "service": "Key Vault",
+        "cost": 1.3333
+      },
+      {
+        "date": "2025-12-19",
+        "service": "DNS",
+        "cost": 0.3333
+      },
+      {
+        "date": "2025-12-20",
+        "service": "Azure Firewall",
+        "cost": 30.0
+      },
+      {
+        "date": "2025-12-20",
+        "service": "Virtual Machines",
+        "cost": 20.0
+      },
+      {
+        "date": "2025-12-20",
+        "service": "Application Gateway",
+        "cost": 14.2857
+      },
+      {
+        "date": "2025-12-20",
+        "service": "Storage",
+        "cost": 4.0
+      },
+      {
+        "date": "2025-12-20",
+        "service": "Key Vault",
+        "cost": 1.3333
+      },
+      {
+        "date": "2025-12-20",
+        "service": "DNS",
+        "cost": 0.3333
+      },
+      {
+        "date": "2025-12-21",
+        "service": "Azure Firewall",
+        "cost": 30.0
+      },
+      {
+        "date": "2025-12-21",
+        "service": "Virtual Machines",
+        "cost": 20.0
+      },
+      {
+        "date": "2025-12-21",
+        "service": "Application Gateway",
+        "cost": 14.2857
+      },
+      {
+        "date": "2025-12-21",
+        "service": "Storage",
+        "cost": 4.0
+      },
+      {
+        "date": "2025-12-21",
+        "service": "Key Vault",
+        "cost": 1.3333
+      },
+      {
+        "date": "2025-12-21",
+        "service": "DNS",
+        "cost": 0.3333
+      },
+      {
+        "date": "2025-12-22",
+        "service": "Azure Firewall",
+        "cost": 30.0
+      },
+      {
+        "date": "2025-12-22",
+        "service": "Virtual Machines",
+        "cost": 20.0
+      },
+      {
+        "date": "2025-12-22",
+        "service": "Application Gateway",
+        "cost": 14.2857
+      },
+      {
+        "date": "2025-12-22",
+        "service": "Storage",
+        "cost": 4.0
+      },
+      {
+        "date": "2025-12-22",
+        "service": "Key Vault",
+        "cost": 1.3333
+      },
+      {
+        "date": "2025-12-22",
+        "service": "DNS",
+        "cost": 0.3333
+      },
+      {
+        "date": "2025-12-23",
+        "service": "Azure Firewall",
+        "cost": 30.0
+      },
+      {
+        "date": "2025-12-23",
+        "service": "Virtual Machines",
+        "cost": 20.0
+      },
+      {
+        "date": "2025-12-23",
+        "service": "Storage",
+        "cost": 4.0
+      },
+      {
+        "date": "2025-12-23",
+        "service": "Key Vault",
+        "cost": 1.3333
+      },
+      {
+        "date": "2025-12-23",
+        "service": "DNS",
+        "cost": 0.3333
+      },
+      {
+        "date": "2025-12-24",
+        "service": "Azure Firewall",
+        "cost": 30.0
+      },
+      {
+        "date": "2025-12-24",
+        "service": "Virtual Machines",
+        "cost": 20.0
+      },
+      {
+        "date": "2025-12-24",
+        "service": "Storage",
+        "cost": 4.0
+      },
+      {
+        "date": "2025-12-24",
+        "service": "Key Vault",
+        "cost": 1.3333
+      },
+      {
+        "date": "2025-12-24",
+        "service": "DNS",
+        "cost": 0.3333
+      },
+      {
+        "date": "2025-12-25",
+        "service": "Azure Firewall",
+        "cost": 30.0
+      },
+      {
+        "date": "2025-12-25",
+        "service": "Virtual Machines",
+        "cost": 20.0
+      },
+      {
+        "date": "2025-12-25",
+        "service": "Storage",
+        "cost": 4.0
+      },
+      {
+        "date": "2025-12-25",
+        "service": "Key Vault",
+        "cost": 1.3333
+      },
+      {
+        "date": "2025-12-25",
+        "service": "DNS",
+        "cost": 0.3333
+      },
+      {
+        "date": "2025-12-26",
+        "service": "Azure Firewall",
+        "cost": 30.0
+      },
+      {
+        "date": "2025-12-26",
+        "service": "Virtual Machines",
+        "cost": 20.0
+      },
+      {
+        "date": "2025-12-26",
+        "service": "Storage",
+        "cost": 4.0
+      },
+      {
+        "date": "2025-12-26",
+        "service": "Key Vault",
+        "cost": 1.3333
+      },
+      {
+        "date": "2025-12-26",
+        "service": "DNS",
+        "cost": 0.3333
+      },
+      {
+        "date": "2025-12-27",
+        "service": "Azure Firewall",
+        "cost": 30.0
+      },
+      {
+        "date": "2025-12-27",
+        "service": "Virtual Machines",
+        "cost": 20.0
+      },
+      {
+        "date": "2025-12-27",
+        "service": "Storage",
+        "cost": 4.0
+      },
+      {
+        "date": "2025-12-27",
+        "service": "Key Vault",
+        "cost": 1.3333
+      },
+      {
+        "date": "2025-12-27",
+        "service": "DNS",
+        "cost": 0.3333
+      },
+      {
+        "date": "2025-12-28",
+        "service": "Azure Firewall",
+        "cost": 30.0
+      },
+      {
+        "date": "2025-12-28",
+        "service": "Virtual Machines",
+        "cost": 20.0
+      },
+      {
+        "date": "2025-12-28",
+        "service": "Storage",
+        "cost": 4.0
+      },
+      {
+        "date": "2025-12-28",
+        "service": "Key Vault",
+        "cost": 1.3333
+      },
+      {
+        "date": "2025-12-28",
+        "service": "DNS",
+        "cost": 0.3333
+      },
+      {
+        "date": "2025-12-29",
+        "service": "Azure Firewall",
+        "cost": 30.0
+      },
+      {
+        "date": "2025-12-29",
+        "service": "Virtual Machines",
+        "cost": 20.0
+      },
+      {
+        "date": "2025-12-29",
+        "service": "Storage",
+        "cost": 4.0
+      },
+      {
+        "date": "2025-12-29",
+        "service": "Key Vault",
+        "cost": 1.3333
+      },
+      {
+        "date": "2025-12-29",
+        "service": "DNS",
+        "cost": 0.3333
+      },
+      {
+        "date": "2025-12-30",
+        "service": "Azure Firewall",
+        "cost": 30.0
+      },
+      {
+        "date": "2025-12-30",
+        "service": "Virtual Machines",
+        "cost": 20.0
+      },
+      {
+        "date": "2025-12-30",
+        "service": "Storage",
+        "cost": 4.0
+      },
+      {
+        "date": "2025-12-30",
+        "service": "Key Vault",
+        "cost": 1.3333
+      },
+      {
+        "date": "2025-12-30",
+        "service": "DNS",
+        "cost": 0.3333
+      },
+      {
+        "date": "2025-12-31",
+        "service": "Azure Firewall",
+        "cost": 30.0
+      },
+      {
+        "date": "2025-12-31",
+        "service": "Virtual Machines",
+        "cost": 20.0
+      },
+      {
+        "date": "2025-12-31",
+        "service": "Storage",
+        "cost": 4.0
+      },
+      {
+        "date": "2025-12-31",
+        "service": "Key Vault",
+        "cost": 1.3333
+      },
+      {
+        "date": "2025-12-31",
+        "service": "DNS",
+        "cost": 0.3333
+      }
+    ],
+    "dailyTotal": [
+      {
+        "date": "2025-12-02",
+        "cost": 69.9523
+      },
+      {
+        "date": "2025-12-03",
+        "cost": 69.9523
+      },
+      {
+        "date": "2025-12-04",
+        "cost": 69.9523
+      },
+      {
+        "date": "2025-12-05",
+        "cost": 69.9523
+      },
+      {
+        "date": "2025-12-06",
+        "cost": 69.9523
+      },
+      {
+        "date": "2025-12-07",
+        "cost": 69.9523
+      },
+      {
+        "date": "2025-12-08",
+        "cost": 69.9523
+      },
+      {
+        "date": "2025-12-09",
+        "cost": 69.9523
+      },
+      {
+        "date": "2025-12-10",
+        "cost": 69.9523
+      },
+      {
+        "date": "2025-12-11",
+        "cost": 69.9523
+      },
+      {
+        "date": "2025-12-12",
+        "cost": 69.9523
+      },
+      {
+        "date": "2025-12-13",
+        "cost": 69.9523
+      },
+      {
+        "date": "2025-12-14",
+        "cost": 69.9523
+      },
+      {
+        "date": "2025-12-15",
+        "cost": 69.9523
+      },
+      {
+        "date": "2025-12-16",
+        "cost": 69.9523
+      },
+      {
+        "date": "2025-12-17",
+        "cost": 69.9523
+      },
+      {
+        "date": "2025-12-18",
+        "cost": 69.9523
+      },
+      {
+        "date": "2025-12-19",
+        "cost": 69.9523
+      },
+      {
+        "date": "2025-12-20",
+        "cost": 69.9523
+      },
+      {
+        "date": "2025-12-21",
+        "cost": 69.9523
+      },
+      {
+        "date": "2025-12-22",
+        "cost": 69.9523
+      },
+      {
+        "date": "2025-12-23",
+        "cost": 55.6666
+      },
+      {
+        "date": "2025-12-24",
+        "cost": 55.6666
+      },
+      {
+        "date": "2025-12-25",
+        "cost": 55.6666
+      },
+      {
+        "date": "2025-12-26",
+        "cost": 55.6666
+      },
+      {
+        "date": "2025-12-27",
+        "cost": 55.6666
+      },
+      {
+        "date": "2025-12-28",
+        "cost": 55.6666
+      },
+      {
+        "date": "2025-12-29",
+        "cost": 55.6666
+      },
+      {
+        "date": "2025-12-30",
+        "cost": 55.6666
+      },
+      {
+        "date": "2025-12-31",
+        "cost": 55.6666
+      }
+    ]
+  }
 }

@@ -1,0 +1,12 @@
+{
+  "capturedAt": "2026-02-02T00:00:00Z",
+  "subscriptionId": "00000000-0000-0000-0000-000000000001",
+  "totalCostRecommendations": 1,
+  "recommendations": [
+    {
+      "id": "a1",
+      "category": "Cost",
+      "impact": "Medium"
+    }
+  ]
+}
