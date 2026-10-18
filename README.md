@@ -99,7 +99,8 @@ control at the top of the page:
 - **Executive** — one plain-English page, no raw tables: a headline sentence (spend and savings are
   stated in separate clauses, currencies are never combined), four KPI cards (monthly spend
   run-rate, estimated opportunity split by what blocks it, realised savings, tag compliance vs the
-  90% target with its "approximate" caveat in plain words), the top 5 cost drivers (with any
+  90% target with its "approximate" caveat in plain words), a spend-over-time chart with up to three plain-English events (for example "Application
+  Gateway charges stopped"), the top 5 cost drivers (with any
   per-service note such as "already deleted"), a card for each **decision needed**, progress bars
   against the iteration goals, a collapsed "How reliable are these numbers?" section, and the
   run's `executive-summary.md` (with a download button) when it exists. It never shows finding
@@ -109,7 +110,8 @@ control at the top of the page:
     In flight / Informational) over the findings table. Select a row for the evidence (tool and
     query as code), the resource with an Azure Portal link, and a "what blocks this / next step"
     line. `engineer-backlog.md` is shown in an expander when it exists.
-  - **Spend** — by service and by resource group, with the window and source caveats.
+  - **Spend** — a daily spend timeline (service multiselect, stacked/lines toggle, an events
+    table), then spend by service and by resource group, with the window and source caveats.
   - **Governance** — tag coverage per required tag, iteration goals, and findings by type, tier
     and status.
   - **History & data quality** — KPI cards with sparklines and every KPI's method/unavailable
@@ -122,6 +124,24 @@ the default. Share a link to a specific view with query parameters:
 `http://localhost:8501/?view=executive&run=20261015-1245`); invalid values fall back to the
 defaults. The look is set by `.streamlit/config.toml` (light and dark themes, minimal toolbar) and
 `scripts/dashboard_theme.py`. Requires Streamlit 1.50 or newer.
+
+The spend timeline needs the daily cost series that Discovery now captures in `spend.json`
+(`daily`); older runs without it show "Daily data not captured — re-run Discovery" instead of
+anything invented. Events — a service that **stopped**, **started**, had a sustained **step
+change** or a **spike** — are detected from the settled days only: the last three days are still
+settling, so they are drawn dashed and lighter and never used for detection. Add your own notes in
+`.finops/events.json` (`[{"date": "2026-09-11", "label": "Moved the gateway", "service":
+"Application Gateway"}]`). The dashboard also warns if the daily figures differ from the period
+total by more than 1%.
+
+```bash
+python scripts/validate_discovery.py .finops/runs/<id>/   # check Discovery's output (daily series, tag data)
+python scripts/spend_events.py .finops/runs/<id>/         # optional: write reports/spend-events.json
+```
+
+> **Offline-verified:** the daily series, validator, event detection and charts are tested against
+> fixtures only. The extra Daily-grain `arm.query_costs` call has not yet been run against a real
+> Azure subscription.
 
 ```bash
 pip install -r requirements-dev.txt

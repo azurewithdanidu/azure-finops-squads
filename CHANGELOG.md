@@ -45,6 +45,26 @@ All notable changes to **finops-squad** are documented here. The format is based
   `docs/getting-started.md`, `copilot-instructions.md`, `findings.instructions.md`,
   `bicep.instructions.md`, several skill descriptions, and the README pipeline diagram).
 
+### Added (daily spend timeline)
+
+- **Daily spend series, annotated timeline and a more complete Discovery.** `spend.json` gains an
+  optional `daily` block (top 10 services plus `Other`, `dailyTotal`, `provisionalFrom`,
+  `truncated`), described by the new `schemas/spend.schema.json` (all fields optional, so existing
+  run folders still load). New `scripts/validate_discovery.py` checks inventory/spend/advisor shape
+  (errors for malformed data, warnings for missing enrichments) and runs in CI on a complete
+  fixture. The Discovery agent and the `cost-query-patterns` skill now require one extra
+  Daily-grain `arm.query_costs` call reconciled against the totals, make
+  `tagCoverage.fullyTaggedCount` and `resourceGroupTags` required unless skipped with a reason in
+  `inventory.json` `enrichmentSkipped`, and validate before hand-off. New `scripts/spend_events.py`
+  detects stopped / started / step-change / spike events on settled days (plus manual events from
+  `.finops/events.json` and iteration boundaries) and writes `reports/spend-events.json`; new
+  `scripts/charts.py` draws the stacked-area and lines timelines with provisional days dashed and
+  event markers. The Executive view shows the total with up to three plain-English events; the
+  Engineering Spend tab adds a service multiselect, a stacked/lines toggle and an events table. A
+  missing daily series shows "Daily data not captured — re-run Discovery" and nothing is invented.
+  All of this is offline-verified (fixtures and unit tests); the unfiltered Daily
+  `arm.query_costs` call has not yet been run against a real subscription.
+
 ### Fixed
 
 - **Corrected a major capability-map error from v0.1.0.** `cost.query_spend`, `cost.query_aks`,
