@@ -264,3 +264,21 @@ def test_real_run_shapes_load_without_errors():
     for run in runs.iterdir():
         for name, (errs, _) in vd.validate_run(run).items():
             assert errs == [], f"{run.name}/{name}: {errs}"
+
+
+def test_skipped_daily_with_a_reason_is_accepted_without_a_warning(tmp_path):
+    run = tmp_path / "r"
+    run.mkdir()
+    (run / "spend.json").write_text(json.dumps({"status": "available"}), encoding="utf-8")
+    (run / "advisor.json").write_text(
+        json.dumps({"capturedAt": "x", "recommendations": []}), encoding="utf-8"
+    )
+    inventory = {
+        "tagCoverage": {"total": 2, "fullyTaggedCount": 1}, "resourceGroupTags": {},
+        "enrichmentSkipped": [{"field": "daily", "reason": "Daily query returned HTTP 429 twice"}],
+    }
+    (run / "inventory.json").write_text(json.dumps(inventory), encoding="utf-8")
+    assert vd.validate_run(run)["spend.json"] == ([], [])
+    inventory["enrichmentSkipped"][0]["reason"] = ""  # no reason -> not accepted
+    (run / "inventory.json").write_text(json.dumps(inventory), encoding="utf-8")
+    assert vd.validate_run(run)["spend.json"][1], "an unexplained skip must still warn"

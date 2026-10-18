@@ -104,6 +104,19 @@ assessment itself refreshes.
 - **No spend numbers / "spend data unavailable"** — Discovery attempts `arm.query_costs` first;
   this status only appears if that call genuinely failed in your environment (check the recorded
   `reason` in `spend.json`). Waste/utilization findings still work regardless.
+- **Validator warns "daily spend series not captured"** — the dashboard's spend timeline is
+  empty. Re-run Discovery so it makes the extra Daily-grain `arm.query_costs` call (see the
+  "Daily series" section of the `cost-query-patterns` skill); if the call really failed, Discovery
+  records the reason in `inventory.json` `enrichmentSkipped`.
+- **Validator warns about `fullyTaggedCount` or `resourceGroupTags`** — these enrichments are
+  required, otherwise tagging compliance is only an approximation and allocation coverage shows
+  "—". Re-run Discovery's tag-coverage and resource-group-tags queries
+  (`.github/skills/resource-graph-kql/references/kql-query-catalog.md`), or have it record why it
+  skipped them. Check any run folder with
+  `python scripts/validate_discovery.py .finops/runs/<id>/ --strict`.
+- **"Daily total differs from the period total"** — the daily and aggregate calls used different
+  windows, metrics or currencies, or cost data was still settling. Re-run Discovery; the series is
+  never adjusted to force a match.
 - **Validation fails** — run `pip install jsonschema`; the script falls back to minimal checks
   without it.
 - **MCP server not listed** — ensure `.vscode/mcp.json` exists and restart MCP servers.

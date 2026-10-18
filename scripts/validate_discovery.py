@@ -50,7 +50,9 @@ def _schema_errors(doc, schema_path: Path) -> list[str]:
 
 
 # ---------------------------------------------------------------------------------- spend
-def validate_spend(doc) -> Report:
+def validate_spend(doc, skipped_fields: frozenset | set = frozenset()) -> Report:
+    """`skipped_fields` are the inventory.json `enrichmentSkipped` fields (a skipped daily series
+    with a recorded reason is accepted without a warning)."""
     errors: list[str] = []
     warnings: list[str] = []
     if not isinstance(doc, dict):
@@ -64,10 +66,12 @@ def validate_spend(doc) -> Report:
         return errors, warnings  # nothing else to enrich
 
     if "daily" not in doc:
-        warnings.append(
-            "daily spend series not captured (spend.daily): re-run the Daily-grain "
-            "arm.query_costs call — the dashboard's spend timeline will be empty"
-        )
+        if "daily" not in skipped_fields:
+            warnings.append(
+                "daily spend series not captured (spend.daily): re-run the Daily-grain "
+                "arm.query_costs call, or record why in inventory.json enrichmentSkipped — "
+                "the dashboard's spend timeline will be empty"
+            )
         return errors, warnings
     if errors and any(e.startswith("daily") for e in errors):
         return errors, warnings  # structurally broken: semantic checks would just add noise
@@ -260,9 +264,23 @@ VALIDATORS = {
 }
 
 
+def _skipped_fields(run: Path) -> set[str]:
+    """Fields recorded in inventory.json `enrichmentSkipped` (empty if absent or unreadable)."""
+    try:
+        doc = json.loads((run / "inventory.json").read_text(encoding="utf-8"))
+        items = doc.get("enrichmentSkipped") if isinstance(doc, dict) else None
+        return {
+            i["field"] for i in items or []
+            if isinstance(i, dict) and isinstance(i.get("field"), str) and i.get("reason")
+        }
+    except (OSError, ValueError):
+        return set()
+
+
 def validate_run(run: Path) -> dict[str, Report]:
     """Validate the three Discovery artifacts of one run folder."""
     out: dict[str, Report] = {}
+    skipped = _skipped_fields(run)
     for name, fn in VALIDATORS.items():
         path = run / name
         if not path.is_file():
@@ -273,7 +291,7 @@ def validate_run(run: Path) -> dict[str, Report]:
         except (OSError, json.JSONDecodeError) as exc:
             out[name] = ([f"invalid JSON: {exc}"], [])
             continue
-        out[name] = fn(doc)
+        out[name] = fn(doc, skipped) if name == "spend.json" else fn(doc)
     return out
 
 
