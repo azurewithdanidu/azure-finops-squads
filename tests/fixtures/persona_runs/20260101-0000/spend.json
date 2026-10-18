@@ -1,0 +1,52 @@
+{
+  "status": "available",
+  "subscriptionId": "00000000-0000-0000-0000-000000000001",
+  "currency": "USD",
+  "currencyNote": "Billing currency is USD; savings estimates are in AUD and are not combined.",
+  "source": {
+    "note": "The window was shortened to fit the 92-day lookback cap."
+  },
+  "timeframe": "Custom",
+  "from": "2025-12-02",
+  "to": "2025-12-31",
+  "groupBy": "ServiceName",
+  "metric": "Cost",
+  "byService": [
+    {
+      "service": "Azure Firewall",
+      "cost": 900.0
+    },
+    {
+      "service": "Virtual Machines",
+      "cost": 600.0
+    },
+    {
+      "service": "Application Gateway",
+      "cost": 300.0,
+      "note": "Already deleted; historical cost only."
+    },
+    {
+      "service": "Storage",
+      "cost": 120.0
+    },
+    {
+      "service": "Key Vault",
+      "cost": 40.0
+    },
+    {
+      "service": "DNS",
+      "cost": 10.0
+    }
+  ],
+  "totalLastMonth": 1970.0,
+  "byResourceGroupTop10": [
+    {
+      "resourceGroup": "hub-rg",
+      "cost": 1200.0
+    },
+    {
+      "resourceGroup": "app-rg",
+      "cost": 500.0
+    }
+  ]
+}

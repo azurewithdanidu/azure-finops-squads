@@ -1,0 +1,39 @@
+{
+  "iterationId": "demo-iteration",
+  "goals": [
+    {
+      "description": "Cut the unused public IP spend.",
+      "metric": "saving",
+      "baseline": {
+        "value": 20.0,
+        "currency": "AUD"
+      },
+      "target": {
+        "value": 0.0,
+        "currency": "AUD"
+      },
+      "current": {
+        "value": 10.0,
+        "currency": "AUD"
+      }
+    },
+    {
+      "description": "Raise owner tag coverage.",
+      "metric": "coverage",
+      "baseline": {
+        "value": 0.4
+      },
+      "target": {
+        "value": 0.8
+      },
+      "current": {
+        "value": 0.4
+      }
+    }
+  ],
+  "measurementWindow": {
+    "from": "2026-01-01",
+    "to": "2026-02-01"
+  },
+  "status": "in-progress"
+}

@@ -1,0 +1,157 @@
+[
+  {
+    "id": "waste-0001",
+    "type": "orphaned-public-ip",
+    "tier": "T1",
+    "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/demo-rg/providers/Microsoft.Network/publicIPAddresses/waste-0001",
+    "subscriptionId": "00000000-0000-0000-0000-000000000001",
+    "summary": "A public IP is not attached to anything. It can be deleted once reviewed.",
+    "evidence": [
+      {
+        "capability": "inventory.list_resources",
+        "tool": "az graph query",
+        "query": "Resources | where type == 'x'",
+        "timeWindow": "2026-01-01",
+        "observation": "unassociated"
+      }
+    ],
+    "estimatedMonthlySaving": {
+      "amount": 20.0,
+      "currency": "AUD",
+      "basis": "actual"
+    },
+    "confidence": "high",
+    "effort": "low",
+    "iacMatch": {
+      "repo": null,
+      "path": null,
+      "status": "found"
+    },
+    "status": "proposed",
+    "prUrl": null
+  },
+  {
+    "id": "waste-0002",
+    "type": "orphaned-nic",
+    "tier": "T2",
+    "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/demo-rg/providers/Microsoft.Network/publicIPAddresses/waste-0002",
+    "subscriptionId": "00000000-0000-0000-0000-000000000001",
+    "summary": "A network interface is unused. Its code lives in a repo we cannot see.",
+    "evidence": [
+      {
+        "capability": "inventory.list_resources",
+        "tool": "az graph query",
+        "query": "Resources | where type == 'x'",
+        "timeWindow": "2026-01-01",
+        "observation": "unassociated"
+      }
+    ],
+    "estimatedMonthlySaving": {
+      "amount": 10.0,
+      "currency": "AUD",
+      "basis": "actual"
+    },
+    "confidence": "medium",
+    "effort": "low",
+    "iacMatch": {
+      "repo": null,
+      "path": null,
+      "status": "not-found"
+    },
+    "status": "proposed",
+    "prUrl": null
+  },
+  {
+    "id": "waste-0003",
+    "type": "stopped-but-billed",
+    "tier": "T3",
+    "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/demo-rg/providers/Microsoft.Network/publicIPAddresses/waste-0003",
+    "subscriptionId": "00000000-0000-0000-0000-000000000001",
+    "summary": "Two stopped machines still bill for their disks. Nobody has confirmed who owns them.",
+    "evidence": [
+      {
+        "capability": "inventory.list_resources",
+        "tool": "az graph query",
+        "query": "Resources | where type == 'x'",
+        "timeWindow": "2026-01-01",
+        "observation": "unassociated"
+      }
+    ],
+    "estimatedMonthlySaving": {
+      "amount": 5.5,
+      "currency": "AUD",
+      "basis": "actual"
+    },
+    "confidence": "low",
+    "effort": "low",
+    "iacMatch": {
+      "repo": null,
+      "path": null,
+      "status": "not-found"
+    },
+    "status": "proposed",
+    "prUrl": null
+  },
+  {
+    "id": "waste-0004",
+    "type": "idle-gateway",
+    "tier": "T3",
+    "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/demo-rg/providers/Microsoft.Network/publicIPAddresses/waste-0004",
+    "subscriptionId": "00000000-0000-0000-0000-000000000001",
+    "summary": "A gateway looks idle but the owner must confirm.",
+    "evidence": [
+      {
+        "capability": "inventory.list_resources",
+        "tool": "az graph query",
+        "query": "Resources | where type == 'x'",
+        "timeWindow": "2026-01-01",
+        "observation": "unassociated"
+      }
+    ],
+    "estimatedMonthlySaving": {
+      "amount": 0,
+      "currency": "AUD",
+      "basis": "actual"
+    },
+    "confidence": "low",
+    "effort": "low",
+    "iacMatch": {
+      "repo": null,
+      "path": null,
+      "status": "not-found"
+    },
+    "status": "proposed",
+    "prUrl": null
+  },
+  {
+    "id": "anomaly-0001",
+    "type": "anomaly",
+    "tier": "T0",
+    "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/demo-rg/providers/Microsoft.Network/publicIPAddresses/anomaly-0001",
+    "subscriptionId": "00000000-0000-0000-0000-000000000001",
+    "summary": "A drop in firewall cost is explained by the stopped machines.",
+    "evidence": [
+      {
+        "capability": "inventory.list_resources",
+        "tool": "az graph query",
+        "query": "Resources | where type == 'x'",
+        "timeWindow": "2026-01-01",
+        "observation": "unassociated"
+      }
+    ],
+    "estimatedMonthlySaving": {
+      "amount": 0,
+      "currency": "AUD",
+      "basis": "actual"
+    },
+    "confidence": "high",
+    "effort": "low",
+    "iacMatch": {
+      "repo": null,
+      "path": null,
+      "status": "not-found"
+    },
+    "status": "proposed",
+    "prUrl": null
+  }
+]

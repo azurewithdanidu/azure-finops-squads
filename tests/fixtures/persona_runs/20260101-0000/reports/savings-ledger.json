@@ -1,0 +1,84 @@
+{
+  "currency": "AUD",
+  "mixedCurrencies": false,
+  "totals": {
+    "estimatedMonthly": 35.5,
+    "realisedMonthly": 0.0,
+    "findingCount": 5,
+    "verifiedCount": 0
+  },
+  "byType": {
+    "anomaly": {
+      "estimatedMonthly": 0.0,
+      "realisedMonthly": 0.0,
+      "findingCount": 1,
+      "verifiedCount": 0
+    },
+    "idle-gateway": {
+      "estimatedMonthly": 0.0,
+      "realisedMonthly": 0.0,
+      "findingCount": 1,
+      "verifiedCount": 0
+    },
+    "orphaned-nic": {
+      "estimatedMonthly": 10.0,
+      "realisedMonthly": 0.0,
+      "findingCount": 1,
+      "verifiedCount": 0
+    },
+    "orphaned-public-ip": {
+      "estimatedMonthly": 20.0,
+      "realisedMonthly": 0.0,
+      "findingCount": 1,
+      "verifiedCount": 0
+    },
+    "stopped-but-billed": {
+      "estimatedMonthly": 5.5,
+      "realisedMonthly": 0.0,
+      "findingCount": 1,
+      "verifiedCount": 0
+    }
+  },
+  "byCurrency": {
+    "AUD": {
+      "totals": {
+        "estimatedMonthly": 35.5,
+        "realisedMonthly": 0.0,
+        "findingCount": 5,
+        "verifiedCount": 0
+      },
+      "byType": {
+        "anomaly": {
+          "estimatedMonthly": 0.0,
+          "realisedMonthly": 0.0,
+          "findingCount": 1,
+          "verifiedCount": 0
+        },
+        "idle-gateway": {
+          "estimatedMonthly": 0.0,
+          "realisedMonthly": 0.0,
+          "findingCount": 1,
+          "verifiedCount": 0
+        },
+        "orphaned-nic": {
+          "estimatedMonthly": 10.0,
+          "realisedMonthly": 0.0,
+          "findingCount": 1,
+          "verifiedCount": 0
+        },
+        "orphaned-public-ip": {
+          "estimatedMonthly": 20.0,
+          "realisedMonthly": 0.0,
+          "findingCount": 1,
+          "verifiedCount": 0
+        },
+        "stopped-but-billed": {
+          "estimatedMonthly": 5.5,
+          "realisedMonthly": 0.0,
+          "findingCount": 1,
+          "verifiedCount": 0
+        }
+      }
+    }
+  }
+}

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
-import shutil
+import re
 import sys
 from pathlib import Path
 
@@ -495,7 +495,198 @@ def test_chart_builders_return_valid_specs():
     assert any(layer["mark"].get("strokeDash") for layer in trend["layer"] if isinstance(layer["mark"], dict))
 
 
-# ------------------------------------------------------------- dashboard: AppTest smoke test
+# ------------------------------------------------- dashboard: buckets, headline, insights
+import dashboard_insights as I  # noqa: E402  (scripts/ is on sys.path, see top of file)
+
+PERSONA_RUNS = REPO / "tests" / "fixtures" / "persona_runs"
+PERSONA_RUN = PERSONA_RUNS / "20260101-0000"
+
+
+def _fixture_findings():
+    return json.loads((PERSONA_RUN / "findings" / "waste.json").read_text(encoding="utf-8"))
+
+
+def _f(tier="T1", iac="found", status="proposed", type_="orphaned-public-ip", amount=10.0, cur="AUD"):
+    return {
+        "id": "x", "type": type_, "tier": tier, "status": status,
+        "iacMatch": {"status": iac}, "summary": "s", "confidence": "high", "effort": "low",
+        "estimatedMonthlySaving": {"amount": amount, "currency": cur, "basis": "actual"},
+    }
+
+
+@pytest.mark.parametrize(
+    "finding, bucket",
+    [
+        (_f("T1", "found"), "ready"),
+        (_f("T0", "found"), "ready"),
+        (_f("T2", "found"), "ready"),
+        (_f("T1", "not-found"), "blocked_iac"),
+        (_f("T2", "unmanaged"), "blocked_iac"),
+        (_f("T3", "found"), "decision"),
+        (_f(None, "found"), "decision"),
+        (_f("T1", "found", status="pr-open"), "in_flight"),
+        (_f("T3", "not-found", status="merged"), "in_flight"),
+        (_f("T1", "found", status="verified"), "informational"),
+        (_f("T0", "not-found", type_="anomaly"), "informational"),
+    ],
+)
+def test_classify_finding(finding, bucket):
+    assert dashboard_helpers.classify_finding(finding) == bucket
+
+
+def test_type_labels_cover_the_schema_enum():
+    schema = json.loads((REPO / "schemas" / "finding.schema.json").read_text(encoding="utf-8"))
+    for t in schema["properties"]["type"]["enum"]:
+        assert t in dashboard_helpers.TYPE_LABELS, f"no plain-English label for {t}"
+    assert dashboard_helpers.type_label("brand-new-type") == "Brand new type"
+
+
+def _headline(findings, spend=None, primary="AUD"):
+    df = dashboard_helpers.findings_dataframe(findings, {})
+    return I.build_headline(
+        spend if spend is not None else {"status": "unavailable"},
+        I.bucket_totals(df), I.realised_by_currency(df), primary,
+    )
+
+
+SPEND_OK = {
+    "status": "available", "currency": "USD", "from": "2026-07-16", "to": "2026-10-14",
+    "totalLastMonth": 6812.63,
+}
+
+
+def test_headline_single_currency():
+    text = _headline(
+        [_f("T1", "found", amount=5), _f("T2", "not-found", amount=12.42),
+         _f("T3", "not-found", amount=137.39)], SPEND_OK,
+    )
+    assert "Spend was USD 6,812.63 over the 91 days to 14 Oct 2026 (about USD 2,277.12 a month)." in text
+    assert "A$154.81 a month of estimated savings" in text
+    assert "A$5.00 ready to action" in text
+    assert "A$12.42 blocked on access to the infrastructure repo" in text
+    assert "A$137.39 waiting on an owner decision" in text
+    assert text.endswith("Realised so far: A$0.00.")
+
+
+def test_headline_mixed_currency_never_adds_across_currencies():
+    text = _headline([_f(amount=10, cur="AUD"), _f("T3", amount=7, cur="USD")], SPEND_OK)
+    assert "never added together" in text
+    assert "A$10.00 a month" in text and "USD 7.00 a month" in text
+    assert "17" not in text  # no blended total
+    assert text.endswith("Realised so far: A$0.00; USD 0.00.")
+
+
+def test_headline_spend_unavailable_and_missing():
+    assert _headline([_f()], {"status": "unavailable"}).startswith("Spend data is not available")
+    assert _headline([_f()], {}).startswith("No spend breakdown was captured")
+    no_dates = _headline([_f()], {"currency": "USD", "totalLastMonth": 100.0})
+    assert "Spend was USD 100.00 in the period captured." in no_dates
+
+
+def test_headline_zero_findings_and_zero_value_findings():
+    empty = _headline([], SPEND_OK)
+    assert "No findings yet, so no savings have been estimated." in empty
+    assert empty.endswith("Realised so far: A$0.00.")
+    zero = _headline([_f("T3", amount=0)], SPEND_OK)
+    assert "none has an estimated saving yet" in zero
+
+
+def test_headline_everything_blocked():
+    text = _headline([_f("T1", "not-found", amount=8), _f("T2", "unmanaged", amount=2)], SPEND_OK)
+    assert "A$10.00 a month of estimated savings: A$0.00 ready to action" in text
+    assert "A$10.00 blocked on access to the infrastructure repo" in text
+    assert "A$0.00 waiting on an owner decision" in text
+
+
+def test_headline_bucket_amounts_equal_classify_finding_totals():
+    findings = _fixture_findings()
+    expected = {b: 0.0 for b in dashboard_helpers.BUCKETS}
+    for f in findings:
+        expected[dashboard_helpers.classify_finding(f)] += f["estimatedMonthlySaving"]["amount"]
+    text = _headline(findings, SPEND_OK)
+    assert f"{I.money_text('AUD', sum(expected.values()))} a month of estimated savings" in text
+    assert f"{I.money_text('AUD', expected['ready'])} ready to action" in text
+    assert f"{I.money_text('AUD', expected['blocked_iac'])} blocked on access" in text
+    assert f"{I.money_text('AUD', expected['decision'])} waiting on an owner decision" in text
+    # ... and the same amounts the ledger reports, so the two views and the ledger agree
+    ledger_totals = ledger.build_ledger(PERSONA_RUN)["totals"]
+    df = dashboard_helpers.findings_dataframe(findings, {})
+    assert I.estimated_total(I.bucket_totals(df)["AUD"]) == ledger_totals["estimatedMonthly"]
+    assert I.realised_by_currency(df)["AUD"] == ledger_totals["realisedMonthly"]
+
+
+def test_insight_helpers():
+    assert I.money_text("AUD", 1234.5) == "A$1,234.50"
+    assert I.money_text("USD", 6812.63) == "USD 6,812.63"
+    assert I.money_text("not a code", 1) == "? 1.00"
+    assert I.monthly_run_rate(None, 91) is None and I.monthly_run_rate(100, 0) is None
+    assert I.lead_sentence("First one. Second one.") == "First one."
+    assert I.lead_sentence("x" * 500).endswith("…") and len(I.lead_sentence("x" * 500)) <= 240
+    assert I.confidence_words("medium") == "Medium" and I.confidence_words(None) == "Not stated"
+    half = {"baseline": {"value": 20}, "target": {"value": 0}, "current": {"value": 10}}
+    assert I.goal_progress(half) == 0.5
+    same = {"baseline": {"value": 5}, "target": {"value": 5}, "current": {"value": 5}}
+    assert I.goal_progress(same) == 1.0
+    assert I.goal_progress({"baseline": {"value": "n/a"}, "target": {"value": 1}}) is None
+    over = {"baseline": {"value": 0}, "target": {"value": 1}, "current": {"value": 9}}
+    assert I.goal_progress(over) == 1.0
+
+
+def test_portal_url_only_for_arm_ids_and_is_encoded():
+    rid = "/subscriptions/abc/resourceGroups/rg one/providers/x/y/z"
+    expected = "https://portal.azure.com/#@/resource/subscriptions/abc/resourceGroups/rg%20one/providers/x/y/z"
+    assert I.portal_url(rid) == expected
+    assert I.portal_url("(subscription-scope)") is None
+    assert I.portal_url(None) is None
+    assert "<" not in (I.portal_url("/subscriptions/a/<script>") or "")
+
+
+def test_blocker_and_next_step_rules():
+    assert "iac-matching" in I.blocker_and_next_step(_f("T1", "not-found"))[1]
+    assert "manual change request" in I.blocker_and_next_step(_f("T1", "unmanaged"))[1]
+    blocker, step = I.blocker_and_next_step(_f("T3", "not-found"))
+    assert "T3" in blocker and "will not act" in blocker and "owner" in step
+    assert "draft" in I.blocker_and_next_step(_f("T2", "found"))[1]
+    assert "verification" in I.blocker_and_next_step(_f(status="pr-open"))[1]
+    assert "No action" in I.blocker_and_next_step(_f(type_="anomaly"))[1]
+
+
+def test_tag_coverage_and_required_tags():
+    inv = {"tagCoverage": {"total": 100, "missingOwner": 60, "missingEnvironment": 40}}
+    rows = I.tag_coverage_rows(inv, ["owner", "environment", "application"])
+    assert [r["tag"] for r in rows] == ["owner", "environment"]  # no data for application
+    assert rows[0]["coverage"] == 40.0 and rows[1]["coverage"] == 60.0
+    assert I.tag_coverage_rows(None, ["owner"]) == []
+    assert I.required_tags({"requiredTags": ["owner"]}, {}) == ["owner"]
+    assert I.required_tags(None, {"tagging": {"requiredTags": ["cost-centre"]}}) == ["cost-centre"]
+    assert I.required_tags(None, {}) == I.DEFAULT_REQUIRED_TAGS
+
+
+def test_artifact_checklist(tmp_path):
+    assert not any(I.artifact_checklist(tmp_path).values())
+    checklist = I.artifact_checklist(PERSONA_RUN)
+    assert checklist["Spend"] and checklist["Findings"] and checklist["KPIs"]
+    assert not checklist["Advisor"] and not checklist["Verification"]
+
+
+def test_reliability_notes_plain_language():
+    kpis_doc = json.loads((PERSONA_RUN / "reports" / "kpis.json").read_text(encoding="utf-8"))
+    spend = json.loads((PERSONA_RUN / "spend.json").read_text(encoding="utf-8"))
+    notes = " ".join(
+        I.reliability_notes(
+            spend, kpis_doc, {"timeWindow": {"start": "2025-10-01"}}, "AUD", True,
+            {"allocationCoverage": "Allocation coverage"},
+        )
+    )
+    assert "approximate" in notes
+    assert "shortened" in notes
+    assert "never converted or combined" in notes
+    assert "more than one currency" in notes
+    assert "Allocation coverage" in notes  # an unavailable KPI is named
+    assert I.reliability_notes({}, None, {}, "AUD", False, {})[-1].startswith("No KPI set")
+
+
+# ----------------------------------------------------- dashboard: AppTest smoke tests (personas)
 def _dashboard_app(monkeypatch, runs_dir):
     pytest.importorskip("streamlit.testing.v1")
     from streamlit.testing.v1 import AppTest
@@ -504,20 +695,77 @@ def _dashboard_app(monkeypatch, runs_dir):
     return AppTest.from_file(str(SCRIPTS / "dashboard.py"), default_timeout=60)
 
 
+def _all_text(node) -> str:
+    """Every label/value rendered anywhere in an AppTest element tree."""
+    parts = []
+    for attr in ("value", "label", "body", "help"):
+        v = getattr(node, attr, None)
+        if isinstance(v, str):
+            parts.append(v)
+    for child in getattr(node, "children", {}).values():
+        parts.append(_all_text(child))
+    return "\n".join(parts)
+
+
 def test_dashboard_renders_with_no_runs(monkeypatch, tmp_path):
     at = _dashboard_app(monkeypatch, tmp_path / "runs").run()
     assert not at.exception
     assert any("No runs found" in m.value for m in at.markdown)
 
 
-@pytest.mark.parametrize("persona", ["Engineering", "Leadership"])
-def test_dashboard_renders_fixture_run(monkeypatch, tmp_path, persona):
-    runs = tmp_path / "runs"
-    shutil.copytree(REPO / "fixtures", runs / "20260101-0000")
-    at = _dashboard_app(monkeypatch, runs).run()
-    assert not at.exception
-    at.session_state["persona"] = persona
+def test_executive_view_has_no_tables_or_engineering_jargon(monkeypatch):
+    at = _dashboard_app(monkeypatch, PERSONA_RUNS)
+    at.query_params["view"] = "executive"
     at.run()
     assert not at.exception
-    assert len(at.tabs) == 3
-    assert any(m.label == "Findings" for m in at.metric)
+    assert at.session_state["persona"] == "Executive"
+    assert len(at.dataframe) == 0
+    text = _all_text(at.main)
+    assert not re.search(r"\bT[0-3]\b", text), "tier code leaked into the Executive view"
+    for banned in ("iacMatch", "waste-0001", "anomaly-0001", "/subscriptions/", "Raw JSON"):
+        assert banned not in text
+    assert "ready to action" in text and "Decisions needed" in text
+    assert "How reliable are these numbers?" in text
+    assert any(m.label == "Estimated monthly opportunity" for m in at.metric)
+    assert len(at.tabs) == 0
+
+
+def test_engineering_view_has_queue_table_and_four_tabs(monkeypatch):
+    at = _dashboard_app(monkeypatch, PERSONA_RUNS)
+    at.query_params["view"] = "engineering"
+    at.run()
+    assert not at.exception
+    assert len(at.tabs) == 4
+    assert at.tabs[0].label.endswith("Work queue")
+    assert len(at.dataframe) >= 1
+
+
+def test_default_view_is_engineering_and_persona_switch_works(monkeypatch):
+    at = _dashboard_app(monkeypatch, PERSONA_RUNS).run()
+    assert not at.exception and at.session_state["persona"] == "Engineering"
+    at.session_state["persona"] = "Executive"
+    at.run()
+    assert not at.exception and len(at.tabs) == 0
+
+
+def test_invalid_query_params_fall_back_to_defaults(monkeypatch):
+    at = _dashboard_app(monkeypatch, PERSONA_RUNS)
+    at.query_params["view"] = "<script>"
+    at.query_params["run"] = "no-such-run"
+    at.run()
+    assert not at.exception
+    assert at.session_state["persona"] == "Engineering"
+    assert at.session_state["run_name"] == "20260101-0000"
+
+
+def test_both_views_show_the_same_headline_numbers(monkeypatch):
+    texts = {}
+    for view in ("executive", "engineering"):
+        at = _dashboard_app(monkeypatch, PERSONA_RUNS)
+        at.query_params["view"] = view
+        at.run()
+        assert not at.exception
+        texts[view] = _all_text(at.main)
+    totals = ledger.build_ledger(PERSONA_RUN)["totals"]
+    assert I.money_text("AUD", totals["estimatedMonthly"]) in texts["executive"]
+    assert f"{totals['estimatedMonthly']:,.2f}" in texts["engineering"]
