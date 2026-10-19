@@ -33,6 +33,9 @@ param tenantId string = tenant().tenantId
 @minLength(1)
 param allowedPrincipalObjectIds array
 
+@description('Responses endpoint of the finops-orchestrator hosted agent (chat page).')
+param agentEndpoint string
+
 @description('Tags applied to all resources.')
 param tags object = {}
 
@@ -92,6 +95,7 @@ module site 'br/public:avm/res/web/site:0.24.0' = {
           AZURE_CLIENT_ID: identity.outputs.clientId
           FINOPS_STORAGE_ACCOUNT_URL: 'https://${storageAccountName}.blob.${environment().suffixes.storage}'
           FINOPS_STORAGE_CONTAINER: containerName
+          FINOPS_AGENT_ENDPOINT: agentEndpoint
           '${ficSettingName}': identity.outputs.clientId
         }
       }
@@ -109,6 +113,12 @@ module site 'br/public:avm/res/web/site:0.24.0' = {
           identityProviders: {
             azureActiveDirectory: {
               enabled: true
+              login: {
+                // Foundry hosted agents require the signed-in user's token, so request it at sign-in.
+                loginParameters: [
+                  'scope=openid profile offline_access https://ai.azure.com/user_impersonation'
+                ]
+              }
               registration: {
                 openIdIssuer: '${environment().authentication.loginEndpoint}${tenantId}/v2.0'
                 clientId: entraClientId
