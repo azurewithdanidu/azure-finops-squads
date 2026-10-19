@@ -1,0 +1,30 @@
+name: finops-skills
+description: All finops-squad skills. Skills follow each skill's default version.
+skills:
+  - name: advisor-cost-recommendations
+  - name: anomaly-explanation
+  - name: bicep-avm-conventions
+  - name: budget-and-alert-bicep
+  - name: commitment-modelling
+  - name: cost-query-patterns
+  - name: devtest-shutdown-schedules
+  - name: finops-reporting
+  - name: hybrid-benefit-eligibility
+  - name: iac-matching
+  - name: idle-compute-detection
+  - name: iteration-brief
+  - name: orphaned-resource-detection
+  - name: phase-delegation
+  - name: pr-authoring
+  - name: price-basis-handling
+  - name: resource-graph-kql
+  - name: risk-tier-assessment
+  - name: run-orchestration
+  - name: savings-verification
+  - name: storage-tiering-lifecycle
+  - name: tagging-policy-design
+  - name: unit-economics
+# Foundry requires at least one tool entry; code_interpreter is for savings arithmetic only.
+tools:
+  - type: code_interpreter
+    name: calc
