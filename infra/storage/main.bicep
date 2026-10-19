@@ -29,6 +29,13 @@ param softDeleteDays int = 14
 @description('Tags applied to all resources.')
 param tags object = {}
 
+@description('Network default action. Hosted agents and App Service have no fixed IPs, so Allow relies on Entra RBAC (shared keys are disabled). Use Deny with a private endpoint for hardening.')
+@allowed([
+  'Allow'
+  'Deny'
+])
+param networkDefaultAction string = 'Allow'
+
 var storageBlobDataContributor = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
 var storageBlobDataReader = '2a2b9908-6ea1-4ae2-8e65-a410df84e7d1'
 
@@ -45,6 +52,10 @@ module storageAccount 'br/public:avm/res/storage/storage-account:0.33.1' = {
     defaultToOAuthAuthentication: true
     supportsHttpsTrafficOnly: true
     minimumTlsVersion: 'TLS1_2'
+    networkAcls: {
+      defaultAction: networkDefaultAction
+      bypass: 'AzureServices'
+    }
     blobServices: {
       isVersioningEnabled: true
       deleteRetentionPolicyEnabled: true
