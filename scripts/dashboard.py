@@ -25,6 +25,7 @@ runtime — see tests/test_scripts.py.
 """
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import altair as alt
@@ -48,6 +49,10 @@ from dashboard_helpers import (
 
 REPO = Path(__file__).resolve().parent.parent
 RUNS_DIR = REPO / ".finops" / "runs"
+# When set (App Service), runs are mirrored from Blob Storage instead of read from the repo.
+STORAGE_URL = os.environ.get("FINOPS_STORAGE_ACCOUNT_URL", "").strip()
+STORAGE_CONTAINER = os.environ.get("FINOPS_STORAGE_CONTAINER", "finops")
+CACHE_DIR = Path(os.environ.get("FINOPS_CACHE_DIR", "/tmp/finops-cache"))
 
 # unitEconomics is intentionally excluded here: its unit/method can differ run-to-run
 # (azure-openai-tokens vs manual-denominator vs unavailable), so a single trend line would compare
@@ -71,14 +76,40 @@ def list_runs() -> list[Path]:
     return _list_runs(RUNS_DIR)
 
 
+@st.cache_data(ttl=60, show_spinner="Loading runs from storage…")
+def _sync(subscription_id: str) -> str:
+    from blob_sync import sync_subscription
+
+    return str(sync_subscription(STORAGE_URL, subscription_id, CACHE_DIR, STORAGE_CONTAINER))
+
+
+@st.cache_data(ttl=60)
+def _subscriptions() -> list[str]:
+    from blob_sync import list_subscriptions
+
+    return list_subscriptions(STORAGE_URL, STORAGE_CONTAINER)
+
+
 # ----------------------------------------------------------------------- setup
 st.set_page_config(page_title="finops-squad dashboard", page_icon="💸", layout="wide")
 st.title("💸 finops-squad dashboard")
-st.caption("Read-only visualizer for `.finops/runs/<id>/` artifacts. No Azure calls, no mutations.")
+st.caption("Read-only visualizer for finops run artifacts. No Azure calls, no mutations.")
+
+if STORAGE_URL:
+    try:
+        subs = _subscriptions()
+    except Exception as exc:
+        st.error(f"Cannot read storage: {type(exc).__name__}")
+        st.stop()
+    if not subs:
+        st.warning("No subscriptions with runs found in storage. Run an audit first.")
+        st.stop()
+    chosen_sub = st.sidebar.selectbox("Subscription", subs)
+    RUNS_DIR = Path(_sync(chosen_sub))
 
 runs = list_runs()
 if not runs:
-    st.warning("No runs found under `.finops/runs/`. Run an audit first.")
+    st.warning("No runs found. Run an audit first.")
     st.stop()
 
 run_name = st.sidebar.selectbox("Run", [p.name for p in runs], index=0)
