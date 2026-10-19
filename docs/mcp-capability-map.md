@@ -68,6 +68,19 @@ agent host's own built-in Azure integration, not from the npm server we installe
 
 ---
 
+## Foundry-hosted agents (checked 2026-10-19)
+
+Hosted agents will not have this host's built-in `arm` tool. Direct ARM REST calls with a bearer
+token for `https://management.azure.com` work and are the planned replacement (the hosted agent's
+managed identity supplies the token):
+
+| Capability | Foundry-host replacement | Check |
+|---|---|---|
+| `cost.query_spend` | `POST /subscriptions/{id}/providers/Microsoft.CostManagement/query?api-version=2023-11-01` | Live-verified (17 rows, month-to-date by ServiceName) |
+| `inventory.list_resources` | `POST /providers/Microsoft.ResourceGraph/resources?api-version=2022-10-01` | Live-verified |
+| `pricing.retail_lookup` | Public Retail Prices API (no auth) | Previously verified |
+| `advisor`, `metrics.utilization` | ARM REST (Advisor recommendations, Monitor metrics) | Not yet verified from a hosted agent |
+
 ## Remaining gaps and follow-up decisions
 
 | Gap | Impact | Recommended resolution |

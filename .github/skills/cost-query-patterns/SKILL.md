@@ -5,10 +5,11 @@ description: Query Azure spend by service, resource group, tag and time grain, h
 
 # Cost query patterns
 
-Spend data comes from the **`arm` tool's `query_costs` command** (live-verified working, no extra
-config needed in this agent host — see [mcp-capability-map.md](../../../docs/mcp-capability-map.md)
-for the full correction history). **Always attempt `arm.query_costs` first.** Only treat
-`cost.query_spend` as unavailable if the call itself genuinely fails in your environment.
+Spend data comes from the **`arm` tool's `query_costs` command** in the Copilot/VS Code host
+(live-verified working, no extra config), or the Cost Management query REST API in a
+Foundry-hosted agent — see [capability-backends.md](references/capability-backends.md).
+**Always attempt the call first.** Only treat `cost.query_spend` as unavailable if the call itself
+genuinely fails in your environment.
 
 ## When to use
 

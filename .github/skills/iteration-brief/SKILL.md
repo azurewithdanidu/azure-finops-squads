@@ -45,7 +45,7 @@ only wants a one-off engineering scan should never be forced through this.
    and the Visualizer's retrospective don't have to parse prose).
 3. Record explicit business constraints (guardrails) alongside the cost goal — e.g. "no production
    changes during business hours," "don't touch anything tagged `dr=true`." These feed the
-   orchestrator's ranking (see [finops-orchestrator.agent.md](../../agents/finops-orchestrator.agent.md))
+   orchestrator's ranking (see the finops-orchestrator agent)
    without inventing a universal "business value" score.
 4. State what's explicitly out of scope, so a later reviewer can tell deliberate exclusion from an
    oversight.

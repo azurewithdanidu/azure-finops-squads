@@ -48,7 +48,7 @@ If data is too fresh or lagging, return `result: "inconclusive"` — do not forc
    | `inconclusive` | data too fresh / ambiguous / resource re-created |
 
 4. Write `verification/<finding-id>.json`
-   ([schema](../../../schemas/verification.schema.json)) with `notes` stating the lag allowance. A
+   ([schema](references/verification.schema.json)) with `notes` stating the lag allowance. A
    full worked example is in [references/worked-example.md](references/worked-example.md).
 
 ## Pitfalls

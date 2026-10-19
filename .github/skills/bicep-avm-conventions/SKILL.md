@@ -5,7 +5,7 @@ description: Apply Azure Verified Modules (AVM) and Bicep style when authoring r
 
 # Bicep / AVM conventions
 
-Mirrors [bicep.instructions.md](../../instructions/bicep.instructions.md); use this when actively
+Mirrors the repository's `bicep.instructions.md`; use this when actively
 authoring a fix.
 
 ## When to use

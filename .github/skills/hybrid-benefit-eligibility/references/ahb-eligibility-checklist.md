@@ -12,5 +12,5 @@ A concrete checklist for turning an AHB candidate into a finding.
    only) via `pricing`. The delta is the estimated saving.
 4. **Label confidence** — medium at best until the user confirms entitlement; never high.
 5. **Write the finding** — `tier: T2`, `iacMatch` per normal rules, saving labelled `list-price` or
-   `actual` per [price-basis-handling](../price-basis-handling/SKILL.md), and a note that the
+   `actual` per [price-basis-handling](../../price-basis-handling/SKILL.md), and a note that the
    saving is conditional on confirmed licence entitlement.

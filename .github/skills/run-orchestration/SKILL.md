@@ -99,7 +99,7 @@ resume procedure below deterministic.
 - Don't let `run-status.md` duplicate or drift from `plan.md` or a finding's own `status` field:
   `run-status.md` tracks pipeline progress; each finding's `proposed → … → verified` lifecycle
   still lives only inside the finding JSON (see
-  [findings.instructions.md](../../instructions/findings.instructions.md)).
+  `findings.instructions.md`).
 - Keep this file to a phase table and a blockers list — it's a dashboard, not a replacement for the
   ranked detail in `plan.md`.
 
