@@ -8,6 +8,30 @@ All notable changes to **finops-squad** are documented here. The format is based
 
 ### Changed
 
+- **Made the dashboard's two personas genuinely different (Executive vs Engineering), built from
+  the same data.** `scripts/dashboard.py` now loads a run into one `RunContext` and calls
+  `render_executive` (`scripts/dashboard_exec.py`) or `render_engineering`
+  (`scripts/dashboard_eng.py`). **Executive** is a single plain-English page — headline sentence,
+  four KPI cards, top 5 cost drivers, decisions needed, goal progress, a reliability note and the
+  executive summary with a download button — with no finding ids, tier codes, IaC details or
+  resource ids. **Engineering** has Work queue / Spend / Governance / History & data quality tabs,
+  an action-bucket filter and a finding detail view with the evidence's tool and query, an Azure
+  Portal link and a rule-based blocker and next step. The "Leadership" persona label is now
+  "Executive". The view and run are synced to `?view=executive|engineering&run=<run id>`. New
+  `classify_finding` action buckets and `TYPE_LABELS` in `scripts/dashboard_helpers.py`, and shared
+  pure logic in `scripts/dashboard_insights.py`, keep both views' numbers identical.
+- **Modernised the dashboard UI (presentation only — no data or calculations changed).** Custom
+  light/dark theme and minimal toolbar in `.streamlit/config.toml`; a single palette and Altair
+  theme in `scripts/dashboard_theme.py` with chart builders in `scripts/dashboard_charts.py`; a
+  compact header with currency/price-basis chips; the run selector and persona switch moved from
+  the sidebar to a top control row; Material icons on tabs; bordered KPI cards with run-history
+  sparklines; consistently labelled and sorted charts, a dashed 90% tagging target and
+  text-plus-colour risk tiers; a `column_config` findings table whose row selection opens a
+  structured detail dialog; mtime-keyed `st.cache_data` file loading; friendlier empty states. In
+  mixed-currency runs the "Estimated saving by type" chart now shows the primary currency only,
+  instead of summing across currencies. Minimum Streamlit raised from 1.40 to 1.50. New pure
+  helpers and an AppTest smoke test are covered in `tests/test_scripts.py`; the dashboard also
+  reads an optional `FINOPS_RUNS_DIR` environment variable.
 - **Restructured the agent roster from 10 agents to 5: Orchestrator, Discovery, Analyser,
   Implementer, Visualizer.** The five previous finding agents (Waste Hunter, Rightsizer, Tagger,
   Commitment Planner, Anomaly Detective) plus the Verifier were each thin wrappers around a single

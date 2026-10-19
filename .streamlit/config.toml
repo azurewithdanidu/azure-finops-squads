@@ -1,0 +1,42 @@
+# Dashboard theme and chrome. Colours here and in scripts/dashboard_theme.py are one palette --
+# keep them in sync. Defining both [theme.light] and [theme.dark] lets viewers switch modes from
+# the app's Settings menu. Requires Streamlit >= 1.50 (see requirements-dev.txt).
+
+[client]
+# Hides the Deploy button; keeps the minimal menu.
+toolbarMode = "minimal"
+
+[theme]
+# Built-in sans-serif: no third-party font request, so the dashboard also works offline.
+font = "sans-serif"
+baseRadius = "10px"
+buttonRadius = "8px"
+showWidgetBorder = true
+linkUnderline = false
+headingFontSizes = ["1.75rem", "1.35rem", "1.1rem", "1rem", "0.9rem", "0.8rem"]
+headingFontWeights = [650, 650, 600, 600, 600, 600]
+
+[theme.light]
+primaryColor = "#0b63ce"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f3f5f8"
+textColor = "#1b1f24"
+borderColor = "#d8dee6"
+greenColor = "#1f8a4c"
+orangeColor = "#b86e00"
+redColor = "#c5281c"
+grayColor = "#5f6b7a"
+# Okabe-Ito based, colour-blind safe. Keep in sync with CATEGORICAL in dashboard_theme.py.
+chartCategoricalColors = ["#0072B2", "#E69F00", "#009E73", "#CC79A7", "#56B4E9", "#D55E00", "#F0E442", "#7A7A7A"]
+
+[theme.dark]
+primaryColor = "#2a78c8"
+backgroundColor = "#0e1117"
+secondaryBackgroundColor = "#171c24"
+textColor = "#e6e9ee"
+borderColor = "#2b323d"
+greenColor = "#3fb872"
+orangeColor = "#e0a030"
+redColor = "#f0625a"
+grayColor = "#9aa4b2"
+chartCategoricalColors = ["#4aa3df", "#E69F00", "#2fc096", "#e08fc0", "#8cd0f5", "#f07a3a", "#F0E442", "#a3a3a3"]

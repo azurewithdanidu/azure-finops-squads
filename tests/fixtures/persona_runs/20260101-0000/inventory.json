@@ -1,0 +1,10 @@
+{
+  "subscriptionId": "00000000-0000-0000-0000-000000000001",
+  "totalResources": 100,
+  "tagCoverage": {
+    "total": 100,
+    "missingOwner": 60,
+    "missingEnvironment": 40,
+    "missingApplication": 50
+  }
+}

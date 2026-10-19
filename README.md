@@ -93,21 +93,35 @@ Full walkthrough: [docs/getting-started.md](docs/getting-started.md).
 ## Dashboard
 
 An interactive, read-only [Streamlit](https://streamlit.io) dashboard visualizes any run's
-artifacts, organized into three named tabs (mirroring the Microsoft FinOps Toolkit's own Power BI
-report structure):
+artifacts. It has two genuinely different views of the same data, chosen with the **View for**
+control at the top of the page:
 
-- **📊 Cost Summary** — headline estimated/realised savings (grouped by currency; mixed-currency
-  runs are never blended into one misleading total), spend by service/trend, or an honest "spend
-  data unavailable" banner.
-- **🧹 Waste & Governance** — iteration-goal progress, savings by finding type, risk-tier/status
-  funnels, and the full findings table with evidence.
-- **📈 KPIs & Trends** — a named FinOps KPI set (tagging compliance vs the FinOps Framework's 90%
-  target, allocation coverage, savings opportunity, realised rate, anomaly trend), a run-over-run
-  trend chart, and a run-to-run comparison showing resolved/recurring/new findings.
+- **Executive** — one plain-English page, no raw tables: a headline sentence (spend and savings are
+  stated in separate clauses, currencies are never combined), four KPI cards (monthly spend
+  run-rate, estimated opportunity split by what blocks it, realised savings, tag compliance vs the
+  90% target with its "approximate" caveat in plain words), the top 5 cost drivers (with any
+  per-service note such as "already deleted"), a card for each **decision needed**, progress bars
+  against the iteration goals, a collapsed "How reliable are these numbers?" section, and the
+  run's `executive-summary.md` (with a download button) when it exists. It never shows finding
+  ids, tier codes, IaC details or resource ids.
+- **Engineering** — four tabs, landing on the work queue:
+  - **Work queue** — an action-bucket filter (Ready for PR / Blocked on IaC / Decision needed /
+    In flight / Informational) over the findings table. Select a row for the evidence (tool and
+    query as code), the resource with an Azure Portal link, and a "what blocks this / next step"
+    line. `engineer-backlog.md` is shown in an expander when it exists.
+  - **Spend** — by service and by resource group, with the window and source caveats.
+  - **Governance** — tag coverage per required tag, iteration goals, and findings by type, tier
+    and status.
+  - **History & data quality** — KPI cards with sparklines and every KPI's method/unavailable
+    note, the KPI trend, run comparison (resolved / recurring / new), `run-status.md`, and an
+    artifacts checklist for each run.
 
-A sidebar **persona toggle** (Engineering / Leadership) shows the full finding-level detail only to
-Engineering — Leadership sees KPI cards and charts, per the FinOps Framework's own
-persona-differentiated-detail guidance.
+Both views compute their numbers from the same helpers, so they cannot disagree. Engineering is
+the default. Share a link to a specific view with query parameters:
+`?view=executive|engineering&run=<run id>` (for example
+`http://localhost:8501/?view=executive&run=20261015-1245`); invalid values fall back to the
+defaults. The look is set by `.streamlit/config.toml` (light and dark themes, minimal toolbar) and
+`scripts/dashboard_theme.py`. Requires Streamlit 1.50 or newer.
 
 ```bash
 pip install -r requirements-dev.txt
@@ -115,7 +129,7 @@ python scripts/kpis.py .finops/runs/<id>/ --runs-dir .finops/runs  # optional, f
 streamlit run scripts/dashboard.py
 ```
 
-Pick a run from the sidebar. The dashboard reads `.finops/runs/<id>/` only — it never calls Azure
+Pick a run from the control row at the top of the page. The dashboard reads `.finops/runs/<id>/` only — it never calls Azure
 and never mutates artifacts, and it keeps estimated and realised savings strictly separate. See
 [docs/scheduling-recurring-runs.md](docs/scheduling-recurring-runs.md) for keeping multiple runs
 accumulating so the trend/comparison views have real data to show.
