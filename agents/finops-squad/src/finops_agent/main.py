@@ -1,14 +1,16 @@
 """finops-squad hosted agent. One codebase; AGENT_ROLE selects the role, tools and skills."""
 import asyncio
 import io
+import json
 import logging
 import os
 import shutil
 import tempfile
 import zipfile
 from pathlib import Path
+from typing import Annotated
 
-from agent_framework import Agent, SkillsProvider
+from agent_framework import Agent, SkillsProvider, tool
 from agent_framework.foundry import FoundryChatClient
 from agent_framework_foundry_hosting import ResponsesHostServer
 from azure.ai.projects.aio import AIProjectClient
@@ -63,32 +65,88 @@ async def _bootstrap_skills(endpoint: str, names: list[str]) -> None:
                 raise RuntimeError(f"skill '{name}' has no SKILL.md at its root")
 
 
+def _provider_for(skill_names: list[str], role: str) -> SkillsProvider | None:
+    """Build a skills provider exposing only this role's skills from the shared download."""
+    d = SKILLS_DIR.parent / "role_skills" / role
+    if d.exists():
+        shutil.rmtree(d)
+    d.mkdir(parents=True)
+    found = 0
+    for n in skill_names:
+        if (SKILLS_DIR / n).is_dir():
+            shutil.copytree(SKILLS_DIR / n, d / n)
+            found += 1
+    if not found:
+        return None
+    # Skills are read-only instructions and there are no scripts, so no approval gate is needed.
+    return SkillsProvider.from_paths(
+        skill_paths=str(d),
+        disable_load_skill_approval=True,
+        disable_read_skill_resource_approval=True,
+    )
+
+
+def _split(csv: str) -> list[str]:
+    return [n.strip() for n in csv.split(",") if n.strip()]
+
+
+def make_specialist_tools(build) -> list:
+    discovery, analyser, visualizer, implementer = (build(r) for r in ("discovery", "analyser", "visualizer", "implementer"))
+
+    @tool
+    async def draft_pull_request(
+        task: Annotated[str, "Subscription id, run id and the approved finding ids to draft PRs for"],
+        user_approval: Annotated[str, "The user's exact words approving these specific findings in this conversation"],
+    ) -> str:
+        """Ask the Implementer to draft Bicep changes and PR bodies (stored in blob; nothing is applied). Requires explicit user approval."""
+        if len(user_approval.strip()) < 3:
+            return json.dumps({"error": True, "body": "Explicit user approval is required. Ask the user which findings to approve."})
+        return (await implementer.run(task)).text
+
+    return [
+        discovery.as_tool(name="run_discovery", description="Inventory, spend and Advisor discovery. Give subscription id and run id; it saves inventory.json, spend.json, advisor.json.", arg_name="task"),
+        analyser.as_tool(name="run_analyser", description="Analyse one mode (waste, rightsizing, tagging, commitment, anomaly, verify). Give mode, subscription id and run id; it saves findings/<mode>.json. Call several in parallel for different modes.", arg_name="task"),
+        visualizer.as_tool(name="run_visualizer", description="Build savings ledger and KPI reports for a run. Give subscription id and run id.", arg_name="task"),
+        draft_pull_request,
+    ]
+
+
 async def main() -> None:
     role = _env("AGENT_ROLE", "discovery")
     spec = ROLES[role]
     endpoint = os.environ["FOUNDRY_PROJECT_ENDPOINT"]
-    names = [n.strip() for n in _env("SKILL_NAMES", spec["skills"]).split(",") if n.strip()]
+    names = _split(_env("SKILL_NAMES", spec["skills"]))
 
-    providers = []
-    if names:
-        await asyncio.wait_for(_bootstrap_skills(endpoint, names),         timeout=120)
-        # Skills are read-only instructions and there are no scripts, so no approval gate is needed.
-        providers.append(
-            SkillsProvider.from_paths(
-                skill_paths=str(SKILLS_DIR),
-                disable_load_skill_approval=True,
-                disable_read_skill_resource_approval=True,
-            )
-        )
+    # The orchestrator embeds the specialists in-process (Foundry gives callee agents no trusted
+    # user identity when the caller is a managed identity), so it needs their skills too.
+    specialists = ["discovery", "analyser", "visualizer", "implementer"] if role == "orchestrator" else []
+    all_names = list(dict.fromkeys(names + [s for r in specialists for s in _split(ROLES[r]["skills"])]))
+    if all_names:
+        await asyncio.wait_for(_bootstrap_skills(endpoint, all_names), timeout=150)
 
     async with DefaultAzureCredential() as cred:
         client = FoundryChatClient(project_endpoint=endpoint, model=os.environ["AZURE_AI_MODEL_DEPLOYMENT_NAME"], credential=cred)
+
+        def build(r: str) -> Agent:
+            p = _provider_for(_split(ROLES[r]["skills"]), r) if r != role else _provider_for(names, r)
+            return Agent(
+                client=client,
+                name=f"finops-{r}",
+                instructions=ROLES[r]["instructions"],
+                tools=TOOLS.get(r, COMMON_TOOLS),
+                context_providers=[p] if p else [],
+                default_options={"store": False},
+            )
+
+        tools = list(TOOLS.get(role, COMMON_TOOLS))
+        if role == "orchestrator":
+            tools += make_specialist_tools(build)
         agent = Agent(
             client=client,
             name=f"finops-{role}",
             instructions=spec["instructions"],
-            tools=TOOLS.get(role, COMMON_TOOLS),
-            context_providers=providers,
+            tools=tools,
+            context_providers=[p] if (p := _provider_for(names, role)) else [],
             default_options={"store": False},
         )
         await ResponsesHostServer(agent).run_async()

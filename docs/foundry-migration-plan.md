@@ -3,7 +3,8 @@
 Target: Foundry project `danidu-agentic-migrations`
 (`https://danidu-agentic-migrations.services.ai.azure.com/api/projects/danidu-agentic-migrations`).
 
-Status: **plan only, nothing built yet.** Principles in `.github/copilot-instructions.md` still apply
+Status: **phases 0-4 done** (skills, storage `stfinopsdanidu`, five hosted agents, orchestration). Phases 5-8
+(dashboard, chat, schedule, CI/CD) pending. Principles in `.github/copilot-instructions.md` still apply
 (read-only Azure, PR-only remediation, human confirmation before the Implementer, honest numbers).
 
 ## Goals
@@ -64,10 +65,14 @@ visualizer -> implementer -> orchestrator.
   Storage Blob Data Contributor on the `finops` container. Implementer: GitHub connection, no Azure write.
 - Guardrail blocking mutating tools.
 
-### 4. Orchestration
-- Orchestrator calls sub-agents via A2A; analyser modes still launched in parallel in one batch.
+### 4. Orchestration (done)
+- Built: the orchestrator embeds the specialists in-process (`Agent.as_tool`) with their tools and skills. Agent-to-agent
+  calls over the endpoint were tried and fail, because a callee only gets a trusted user ID from a signed-in user, not a
+  managed identity. The standalone agents remain callable directly. Analyser modes run in parallel via parallel tool calls.
+- gpt-4.1 is capped at 50K TPM, so a full parallel pass can be rate limited; raise capacity or run modes sequentially.
 - Artifact verification reads blobs, not agent summaries.
-- Human confirmation before the Implementer is preserved (UI button in the dashboard, not typed text).
+- The Implementer is reached only through `draft_pull_request`, which requires the user's approval text. A dashboard
+  approval button comes in phase 6.
 
 ### 5. Dashboard on App Service
 - Linux App Service (Python), `streamlit run`, WebSockets on.
