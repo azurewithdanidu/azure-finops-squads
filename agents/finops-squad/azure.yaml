@@ -6,6 +6,10 @@ requiredVersions:
         azure.ai.agents: '>=1.0.0-beta.9'
 name: finops-squad
 services:
+    ai-project:
+        host: azure.ai.project
+        deployments: []
+        endpoint: https://danidu-agentic-migrations.services.ai.azure.com/api/projects/danidu-agentic-migrations
     finops-discovery:
         project: src/finops_agent
         host: azure.ai.agent
@@ -13,11 +17,11 @@ services:
         uses:
             - ai-project
         env:
-            AZURE_AI_MODEL_DEPLOYMENT_NAME: ${AZURE_AI_MODEL_DEPLOYMENT_NAME}
             AGENT_ROLE: discovery
-            SKILL_NAMES: resource-graph-kql,cost-query-patterns,advisor-cost-recommendations,price-basis-handling
+            AZURE_AI_MODEL_DEPLOYMENT_NAME: ${AZURE_AI_MODEL_DEPLOYMENT_NAME}
             FINOPS_STORAGE_ACCOUNT_URL: ${FINOPS_STORAGE_ACCOUNT_URL}
             FINOPS_STORAGE_CONTAINER: finops
+            SKILL_NAMES: resource-graph-kql,cost-query-patterns,advisor-cost-recommendations,price-basis-handling
         codeConfiguration:
             dependencyResolution: remote_build
             entryPoint: main.py
@@ -32,16 +36,5 @@ services:
         protocols:
             - protocol: responses
               version: 2.0.0
-    ai-project:
-        host: azure.ai.project
-        deployments:
-            - model:
-                format: OpenAI
-                name: gpt-4.1
-                version: "2025-04-14"
-              name: gpt-4.1
-              sku:
-                capacity: 10
-                name: GlobalStandard
 infra:
     provider: microsoft.foundry

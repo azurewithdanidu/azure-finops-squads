@@ -10,7 +10,7 @@ import json
 import os
 import re
 import time
-from typing import Annotated
+from typing import Annotated, Any
 
 import httpx
 from agent_framework import tool
@@ -110,12 +110,16 @@ def save_artifact(
     subscription_id: Annotated[str, "Subscription GUID the artifact belongs to"],
     run_id: Annotated[str, "Run id, yyyymmdd-hhmm"],
     path: Annotated[str, "Relative path, e.g. inventory.json or findings/waste.json"],
-    content: Annotated[str, "File content; JSON for *.json"],
+    content: Annotated[Any, "File content: a JSON object/array (or JSON string) for *.json, text otherwise"],
 ) -> str:
     """Write a run artifact to storage. Findings and verification files are schema-validated."""
     store = RunStore(_backend(), subscription_id, run_id)
     try:
-        key = store.write_json(path, json.loads(content)) if path.endswith(".json") else store.write_text(path, content)
+        if path.endswith(".json"):
+            doc = json.loads(content) if isinstance(content, str) else content
+            key = store.write_json(path, doc)
+        else:
+            key = store.write_text(path, content if isinstance(content, str) else json.dumps(content))
     except Exception as e:  # report validation errors to the model so it can fix and retry
         return json.dumps({"error": True, "body": str(e)[:2000]})
     return json.dumps({"saved": key})
