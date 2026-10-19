@@ -44,8 +44,17 @@ async def _bootstrap_skills(endpoint: str, names: list[str]) -> None:
     SKILLS_DIR.mkdir(parents=True)
     async with DefaultAzureCredential() as cred, AIProjectClient(endpoint=endpoint, credential=cred, allow_preview=True) as project:
         for name in names:
-            stream = await project.beta.skills.download(name)
-            data = b"".join([c async for c in stream])
+            data = None
+            for attempt in range(3):
+                try:
+                    stream = await project.beta.skills.download(name)
+                    data = b"".join([c async for c in stream])
+                    break
+                except Exception as exc:  # transient upstream errors; skip the skill rather than crash
+                    print(f"skill '{name}' download attempt {attempt + 1} failed: {exc}", flush=True)
+                    await asyncio.sleep(2 * (attempt + 1))
+            if data is None:
+                continue
             d = SKILLS_DIR / name
             d.mkdir()
             with zipfile.ZipFile(io.BytesIO(data)) as zf:
@@ -62,7 +71,7 @@ async def main() -> None:
 
     providers = []
     if names:
-        await asyncio.wait_for(_bootstrap_skills(endpoint, names), timeout=90)
+        await asyncio.wait_for(_bootstrap_skills(endpoint, names),         timeout=120)
         # Skills are read-only instructions and there are no scripts, so no approval gate is needed.
         providers.append(
             SkillsProvider.from_paths(
