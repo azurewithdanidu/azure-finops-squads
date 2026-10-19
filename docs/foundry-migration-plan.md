@@ -3,8 +3,10 @@
 Target: Foundry project `danidu-agentic-migrations`
 (`https://danidu-agentic-migrations.services.ai.azure.com/api/projects/danidu-agentic-migrations`).
 
-Status: **phases 0-4 done** (skills, storage `stfinopsdanidu`, five hosted agents, orchestration). Phases 5-8
-(dashboard, chat, schedule, CI/CD) pending. Principles in `.github/copilot-instructions.md` still apply
+Status: **phases 0-5 done** (skills, storage `stfinopsdanidu`, five hosted agents, orchestration, dashboard at
+`https://finops-dash-danidu.azurewebsites.net` with Entra auth, `infra/dashboard/main.bicep`; deploy by zipping
+`scripts/{dashboard,dashboard_helpers,blob_sync}.py` plus `infra/dashboard/requirements.txt` as `requirements.txt`).
+Phases 6-8 (chat, schedule, CI/CD) pending. Principles in `.github/copilot-instructions.md` still apply
 (read-only Azure, PR-only remediation, human confirmation before the Implementer, honest numbers).
 
 ## Goals
