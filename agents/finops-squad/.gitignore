@@ -1,0 +1,7 @@
+.azure
+
+src/finops_agent/finops_store/
+src/finops_agent/schemas/
+src/finops_agent/.venv/
+__pycache__/
+.env

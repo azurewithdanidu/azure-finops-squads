@@ -1,0 +1,9 @@
+agent-framework-foundry
+agent-framework-foundry-hosting>=1.0.0b260813
+azure-ai-projects
+azure-identity
+azure-storage-blob
+jsonschema
+httpx<1
+openai<3
+python-dotenv
