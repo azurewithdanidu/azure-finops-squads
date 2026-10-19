@@ -10,6 +10,7 @@ import json
 import os
 import re
 import time
+from pathlib import Path
 from typing import Annotated, Any
 
 import httpx
@@ -18,6 +19,7 @@ from azure.identity import DefaultAzureCredential
 from finops_store import BlobBackend, RunStore, list_runs
 
 ARM = "https://management.azure.com"
+os.environ.setdefault("FINOPS_SCHEMA_DIR", str(Path(__file__).resolve().parent / "schemas"))
 _credential = DefaultAzureCredential()
 _SUB = r"[0-9a-fA-F-]{36}"
 _SCOPE_RE = re.compile(rf"^/subscriptions/{_SUB}(/resourceGroups/[\w.()-]+)?$")
@@ -152,4 +154,41 @@ def list_run_artifacts(
 
 
 COMMON_TOOLS = [save_artifact, read_artifact, list_run_artifacts]
-DISCOVERY_TOOLS = [resource_graph_query, cost_query, arm_get, retail_price, *COMMON_TOOLS]
+READ_TOOLS = [resource_graph_query, cost_query, arm_get, retail_price]
+
+
+@tool
+def build_reports(
+    subscription_id: Annotated[str, "Subscription GUID"],
+    run_id: Annotated[str, "Run id"],
+) -> str:
+    """Generate reports/savings-ledger.json and reports/kpis.json from the run's stored artifacts."""
+    import tempfile
+    from pathlib import Path
+
+    import kpis
+    import ledger
+
+    b = _backend()
+    with tempfile.TemporaryDirectory() as tmp:
+        runs_dir = Path(tmp) / ".finops" / "runs"
+        for rid in list_runs(b, subscription_id):
+            for rel in RunStore(b, subscription_id, rid).list():
+                dest = runs_dir / rid / rel
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                dest.write_bytes(b.read(f"{subscription_id}/runs/{rid}/{rel}"))
+        folder = runs_dir / run_id
+        if not folder.is_dir():
+            return json.dumps({"error": True, "body": f"run {run_id} not found"})
+        store = RunStore(b, subscription_id, run_id)
+        led = ledger.build_ledger(folder)
+        store.write_json("reports/savings-ledger.json", led)
+        store.write_json("reports/kpis.json", kpis.build_kpis(folder, runs_dir))
+    return json.dumps({"saved": ["reports/savings-ledger.json", "reports/kpis.json"], "mixedCurrencies": led.get("mixedCurrencies")})
+
+
+DISCOVERY_TOOLS = [*READ_TOOLS, *COMMON_TOOLS]
+ANALYSER_TOOLS = [*READ_TOOLS, *COMMON_TOOLS]
+VISUALIZER_TOOLS = [*COMMON_TOOLS, build_reports]
+IMPLEMENTER_TOOLS = [*COMMON_TOOLS]
+

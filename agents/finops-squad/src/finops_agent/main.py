@@ -16,12 +16,12 @@ from azure.identity.aio import DefaultAzureCredential
 from dotenv import load_dotenv
 
 from roles import ROLES
-from tools import COMMON_TOOLS, DISCOVERY_TOOLS
+from tools import ANALYSER_TOOLS, COMMON_TOOLS, DISCOVERY_TOOLS, IMPLEMENTER_TOOLS, VISUALIZER_TOOLS
 
 load_dotenv()
 logger = logging.getLogger(__name__)
 SKILLS_DIR = Path(tempfile.gettempdir()) / "downloaded_skills"
-TOOLS = {"discovery": DISCOVERY_TOOLS}
+TOOLS = {"discovery": DISCOVERY_TOOLS, "analyser": ANALYSER_TOOLS, "visualizer": VISUALIZER_TOOLS, "implementer": IMPLEMENTER_TOOLS}
 
 
 def _env(name: str, default: str = "") -> str:

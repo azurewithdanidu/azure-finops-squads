@@ -36,5 +36,80 @@ services:
         protocols:
             - protocol: responses
               version: 2.0.0
+    finops-analyser:
+        project: src/finops_agent
+        host: azure.ai.agent
+        language: python
+        uses:
+            - ai-project
+        env:
+            AGENT_ROLE: analyser
+            AZURE_AI_MODEL_DEPLOYMENT_NAME: ${AZURE_AI_MODEL_DEPLOYMENT_NAME}
+            FINOPS_STORAGE_ACCOUNT_URL: ${FINOPS_STORAGE_ACCOUNT_URL}
+            FINOPS_STORAGE_CONTAINER: finops
+        codeConfiguration:
+            dependencyResolution: remote_build
+            entryPoint: main.py
+            runtime: python_3_13
+        container:
+            resources:
+                cpu: "0.5"
+                memory: 1Gi
+        description: FinOps Analyser - waste, rightsizing, tagging, commitment, anomaly and verify modes (read-only).
+        kind: hosted
+        name: finops-analyser
+        protocols:
+            - protocol: responses
+              version: 2.0.0
+    finops-visualizer:
+        project: src/finops_agent
+        host: azure.ai.agent
+        language: python
+        uses:
+            - ai-project
+        env:
+            AGENT_ROLE: visualizer
+            AZURE_AI_MODEL_DEPLOYMENT_NAME: ${AZURE_AI_MODEL_DEPLOYMENT_NAME}
+            FINOPS_STORAGE_ACCOUNT_URL: ${FINOPS_STORAGE_ACCOUNT_URL}
+            FINOPS_STORAGE_CONTAINER: finops
+        codeConfiguration:
+            dependencyResolution: remote_build
+            entryPoint: main.py
+            runtime: python_3_13
+        container:
+            resources:
+                cpu: "0.5"
+                memory: 1Gi
+        description: FinOps Visualizer - executive summary, engineer backlog, savings ledger and KPIs from run artifacts.
+        kind: hosted
+        name: finops-visualizer
+        protocols:
+            - protocol: responses
+              version: 2.0.0
+    finops-implementer:
+        project: src/finops_agent
+        host: azure.ai.agent
+        language: python
+        uses:
+            - ai-project
+        env:
+            AGENT_ROLE: implementer
+            AZURE_AI_MODEL_DEPLOYMENT_NAME: ${AZURE_AI_MODEL_DEPLOYMENT_NAME}
+            FINOPS_STORAGE_ACCOUNT_URL: ${FINOPS_STORAGE_ACCOUNT_URL}
+            FINOPS_STORAGE_CONTAINER: finops
+        codeConfiguration:
+            dependencyResolution: remote_build
+            entryPoint: main.py
+            runtime: python_3_13
+        container:
+            resources:
+                cpu: "0.5"
+                memory: 1Gi
+        description: FinOps Implementer - drafts Bicep changes and PR bodies for approved findings; refuses T3/untiered.
+        kind: hosted
+        name: finops-implementer
+        protocols:
+            - protocol: responses
+              version: 2.0.0
 infra:
     provider: microsoft.foundry
