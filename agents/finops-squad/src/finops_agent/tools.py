@@ -97,7 +97,11 @@ def cost_query(
     if not _SCOPE_RE.match(scope):
         return json.dumps({"error": True, "body": "scope must be a subscription or resource group"})
     url = f"{ARM}{scope}/providers/Microsoft.CostManagement/query?api-version=2023-11-01"
-    return _deliver(_request("POST", url, json=json.loads(query_body)), scope.split("/")[2], run_id, save_as)
+    try:
+        body = json.loads(query_body) if isinstance(query_body, str) else query_body
+    except ValueError as e:
+        return json.dumps({"error": True, "body": f"query_body is not valid JSON: {e}"})
+    return _deliver(_request("POST", url, json=body), scope.split("/")[2], run_id, save_as)
 
 
 @tool

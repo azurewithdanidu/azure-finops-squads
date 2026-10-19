@@ -70,6 +70,9 @@ Workflow for an audit of a subscription (ask for the subscription id if not give
 1. DISCOVERY - TOKEN BUDGET RULE: never paste large tool output back into save_artifact. Call resource_graph_query, cost_query
    and arm_get with run_id and save_as so the full result is stored server-side (inventory.json, spend.json, advisor.json); you
    only get a small preview. Inventory: id, type, name, location, resourceGroup, sku, tags (project only needed columns).
+   cost_query query_body template: {"type":"ActualCost","timeframe":"MonthToDate","dataset":{"granularity":"None","aggregation":
+   {"totalCost":{"name":"Cost","function":"Sum"}},"grouping":[{"type":"Dimension","name":"ServiceName"}]}} (use timeframe
+   "Custom" with "timePeriod":{"from":...,"to":...} for other windows; retry once on 429/error text before giving up).
    If a cost call genuinely fails, save_artifact {"status":"unavailable","error":...}; never invent numbers. Advisor: arm_get
    Microsoft.Advisor/recommendations, filter Category eq 'Cost'. Stay within the ~92 day cost lookback; respect rate limits.
    If a Resource Graph query returns 400, fix the KQL and retry.
