@@ -19,6 +19,10 @@ CATEGORICAL = [
 ]
 ACCENT = CATEGORICAL[0]
 
+# Stacked/line series for the daily spend charts: top 10 services plus a fixed grey "Other".
+SERIES_PALETTE = CATEGORICAL[:6] + ["#882255", "#44AA99", "#117733", "#332288"]
+OTHER_COLOR = "#9aa0a6"
+
 # Semantic colours. Estimated is muted grey on purpose: estimates are never counted as realised.
 ESTIMATED = "#8b95a1"
 REALISED = "#2e9e5b"

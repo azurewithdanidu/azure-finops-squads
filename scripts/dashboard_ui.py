@@ -49,6 +49,7 @@ class RunContext:
     history: dict  # kpi trend DataFrames, all runs oldest-first
     mode: str  # "light" | "dark"
     load_run: Callable[[Path], dict] = field(repr=False, default=lambda p: {})
+    events: dict = field(default_factory=dict)  # spend_events.detect_events(...) report
 
     def spark(self, metric_key: str) -> list[float]:
         """KPI history up to and including the selected run, oldest first."""

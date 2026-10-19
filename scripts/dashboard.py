@@ -31,6 +31,7 @@ import streamlit as st
 
 import dashboard_insights as I
 import dashboard_theme as T
+import spend_events
 from dashboard_eng import render_engineering
 from dashboard_exec import render_executive
 from dashboard_helpers import (
@@ -216,6 +217,12 @@ est = (
 )
 real = I.realised_by_currency(df).get(currency, float(totals.get("realisedMonthly", 0.0)))
 
+# Spend events (stopped / started / step-change / spike, manual notes, iteration window) come
+# from the daily series; computed in memory, never fabricated when `daily` is missing.
+manual_events, manual_warnings = spend_events.load_manual_events(CONFIG_PATH.parent / "events.json")
+events = spend_events.detect_events(spend, iteration, manual_events)
+events["warnings"] = manual_warnings + events.get("warnings", [])
+
 oldest_first = sorted(runs, key=lambda p: p.name)
 ctx = RunContext(
     runs_dir=RUNS_DIR,
@@ -241,6 +248,7 @@ ctx = RunContext(
     history=_kpi_history(tuple(str(p) for p in oldest_first), _kpis_fingerprint(oldest_first)),
     mode=mode,
     load_run=load_run,
+    events=events,
 )
 
 if persona == "Executive":

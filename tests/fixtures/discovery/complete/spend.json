@@ -1,0 +1,471 @@
+{
+  "status": "available",
+  "capturedAt": "2026-02-02T00:00:00Z",
+  "subscriptionId": "00000000-0000-0000-0000-000000000001",
+  "currency": "USD",
+  "timeframe": "Custom",
+  "granularity": "None",
+  "from": "2026-01-01",
+  "to": "2026-01-31",
+  "groupBy": "ServiceName",
+  "metric": "Cost",
+  "byService": [
+    {
+      "service": "Virtual Machines",
+      "cost": 1550.0
+    },
+    {
+      "service": "Storage",
+      "cost": 155.0
+    }
+  ],
+  "totalLastMonth": 1705.0,
+  "daily": {
+    "granularity": "Daily",
+    "groupBy": "ServiceName",
+    "metric": "Cost",
+    "currency": "USD",
+    "from": "2026-01-01",
+    "to": "2026-01-31",
+    "provisionalFrom": "2026-01-29",
+    "truncated": false,
+    "series": [
+      {
+        "date": "2026-01-01",
+        "service": "Virtual Machines",
+        "cost": 50.0
+      },
+      {
+        "date": "2026-01-01",
+        "service": "Storage",
+        "cost": 5.0
+      },
+      {
+        "date": "2026-01-02",
+        "service": "Virtual Machines",
+        "cost": 50.0
+      },
+      {
+        "date": "2026-01-02",
+        "service": "Storage",
+        "cost": 5.0
+      },
+      {
+        "date": "2026-01-03",
+        "service": "Virtual Machines",
+        "cost": 50.0
+      },
+      {
+        "date": "2026-01-03",
+        "service": "Storage",
+        "cost": 5.0
+      },
+      {
+        "date": "2026-01-04",
+        "service": "Virtual Machines",
+        "cost": 50.0
+      },
+      {
+        "date": "2026-01-04",
+        "service": "Storage",
+        "cost": 5.0
+      },
+      {
+        "date": "2026-01-05",
+        "service": "Virtual Machines",
+        "cost": 50.0
+      },
+      {
+        "date": "2026-01-05",
+        "service": "Storage",
+        "cost": 5.0
+      },
+      {
+        "date": "2026-01-06",
+        "service": "Virtual Machines",
+        "cost": 50.0
+      },
+      {
+        "date": "2026-01-06",
+        "service": "Storage",
+        "cost": 5.0
+      },
+      {
+        "date": "2026-01-07",
+        "service": "Virtual Machines",
+        "cost": 50.0
+      },
+      {
+        "date": "2026-01-07",
+        "service": "Storage",
+        "cost": 5.0
+      },
+      {
+        "date": "2026-01-08",
+        "service": "Virtual Machines",
+        "cost": 50.0
+      },
+      {
+        "date": "2026-01-08",
+        "service": "Storage",
+        "cost": 5.0
+      },
+      {
+        "date": "2026-01-09",
+        "service": "Virtual Machines",
+        "cost": 50.0
+      },
+      {
+        "date": "2026-01-09",
+        "service": "Storage",
+        "cost": 5.0
+      },
+      {
+        "date": "2026-01-10",
+        "service": "Virtual Machines",
+        "cost": 50.0
+      },
+      {
+        "date": "2026-01-10",
+        "service": "Storage",
+        "cost": 5.0
+      },
+      {
+        "date": "2026-01-11",
+        "service": "Virtual Machines",
+        "cost": 50.0
+      },
+      {
+        "date": "2026-01-11",
+        "service": "Storage",
+        "cost": 5.0
+      },
+      {
+        "date": "2026-01-12",
+        "service": "Virtual Machines",
+        "cost": 50.0
+      },
+      {
+        "date": "2026-01-12",
+        "service": "Storage",
+        "cost": 5.0
+      },
+      {
+        "date": "2026-01-13",
+        "service": "Virtual Machines",
+        "cost": 50.0
+      },
+      {
+        "date": "2026-01-13",
+        "service": "Storage",
+        "cost": 5.0
+      },
+      {
+        "date": "2026-01-14",
+        "service": "Virtual Machines",
+        "cost": 50.0
+      },
+      {
+        "date": "2026-01-14",
+        "service": "Storage",
+        "cost": 5.0
+      },
+      {
+        "date": "2026-01-15",
+        "service": "Virtual Machines",
+        "cost": 50.0
+      },
+      {
+        "date": "2026-01-15",
+        "service": "Storage",
+        "cost": 5.0
+      },
+      {
+        "date": "2026-01-16",
+        "service": "Virtual Machines",
+        "cost": 50.0
+      },
+      {
+        "date": "2026-01-16",
+        "service": "Storage",
+        "cost": 5.0
+      },
+      {
+        "date": "2026-01-17",
+        "service": "Virtual Machines",
+        "cost": 50.0
+      },
+      {
+        "date": "2026-01-17",
+        "service": "Storage",
+        "cost": 5.0
+      },
+      {
+        "date": "2026-01-18",
+        "service": "Virtual Machines",
+        "cost": 50.0
+      },
+      {
+        "date": "2026-01-18",
+        "service": "Storage",
+        "cost": 5.0
+      },
+      {
+        "date": "2026-01-19",
+        "service": "Virtual Machines",
+        "cost": 50.0
+      },
+      {
+        "date": "2026-01-19",
+        "service": "Storage",
+        "cost": 5.0
+      },
+      {
+        "date": "2026-01-20",
+        "service": "Virtual Machines",
+        "cost": 50.0
+      },
+      {
+        "date": "2026-01-20",
+        "service": "Storage",
+        "cost": 5.0
+      },
+      {
+        "date": "2026-01-21",
+        "service": "Virtual Machines",
+        "cost": 50.0
+      },
+      {
+        "date": "2026-01-21",
+        "service": "Storage",
+        "cost": 5.0
+      },
+      {
+        "date": "2026-01-22",
+        "service": "Virtual Machines",
+        "cost": 50.0
+      },
+      {
+        "date": "2026-01-22",
+        "service": "Storage",
+        "cost": 5.0
+      },
+      {
+        "date": "2026-01-23",
+        "service": "Virtual Machines",
+        "cost": 50.0
+      },
+      {
+        "date": "2026-01-23",
+        "service": "Storage",
+        "cost": 5.0
+      },
+      {
+        "date": "2026-01-24",
+        "service": "Virtual Machines",
+        "cost": 50.0
+      },
+      {
+        "date": "2026-01-24",
+        "service": "Storage",
+        "cost": 5.0
+      },
+      {
+        "date": "2026-01-25",
+        "service": "Virtual Machines",
+        "cost": 50.0
+      },
+      {
+        "date": "2026-01-25",
+        "service": "Storage",
+        "cost": 5.0
+      },
+      {
+        "date": "2026-01-26",
+        "service": "Virtual Machines",
+        "cost": 50.0
+      },
+      {
+        "date": "2026-01-26",
+        "service": "Storage",
+        "cost": 5.0
+      },
+      {
+        "date": "2026-01-27",
+        "service": "Virtual Machines",
+        "cost": 50.0
+      },
+      {
+        "date": "2026-01-27",
+        "service": "Storage",
+        "cost": 5.0
+      },
+      {
+        "date": "2026-01-28",
+        "service": "Virtual Machines",
+        "cost": 50.0
+      },
+      {
+        "date": "2026-01-28",
+        "service": "Storage",
+        "cost": 5.0
+      },
+      {
+        "date": "2026-01-29",
+        "service": "Virtual Machines",
+        "cost": 50.0
+      },
+      {
+        "date": "2026-01-29",
+        "service": "Storage",
+        "cost": 5.0
+      },
+      {
+        "date": "2026-01-30",
+        "service": "Virtual Machines",
+        "cost": 50.0
+      },
+      {
+        "date": "2026-01-30",
+        "service": "Storage",
+        "cost": 5.0
+      },
+      {
+        "date": "2026-01-31",
+        "service": "Virtual Machines",
+        "cost": 50.0
+      },
+      {
+        "date": "2026-01-31",
+        "service": "Storage",
+        "cost": 5.0
+      }
+    ],
+    "dailyTotal": [
+      {
+        "date": "2026-01-01",
+        "cost": 55.0
+      },
+      {
+        "date": "2026-01-02",
+        "cost": 55.0
+      },
+      {
+        "date": "2026-01-03",
+        "cost": 55.0
+      },
+      {
+        "date": "2026-01-04",
+        "cost": 55.0
+      },
+      {
+        "date": "2026-01-05",
+        "cost": 55.0
+      },
+      {
+        "date": "2026-01-06",
+        "cost": 55.0
+      },
+      {
+        "date": "2026-01-07",
+        "cost": 55.0
+      },
+      {
+        "date": "2026-01-08",
+        "cost": 55.0
+      },
+      {
+        "date": "2026-01-09",
+        "cost": 55.0
+      },
+      {
+        "date": "2026-01-10",
+        "cost": 55.0
+      },
+      {
+        "date": "2026-01-11",
+        "cost": 55.0
+      },
+      {
+        "date": "2026-01-12",
+        "cost": 55.0
+      },
+      {
+        "date": "2026-01-13",
+        "cost": 55.0
+      },
+      {
+        "date": "2026-01-14",
+        "cost": 55.0
+      },
+      {
+        "date": "2026-01-15",
+        "cost": 55.0
+      },
+      {
+        "date": "2026-01-16",
+        "cost": 55.0
+      },
+      {
+        "date": "2026-01-17",
+        "cost": 55.0
+      },
+      {
+        "date": "2026-01-18",
+        "cost": 55.0
+      },
+      {
+        "date": "2026-01-19",
+        "cost": 55.0
+      },
+      {
+        "date": "2026-01-20",
+        "cost": 55.0
+      },
+      {
+        "date": "2026-01-21",
+        "cost": 55.0
+      },
+      {
+        "date": "2026-01-22",
+        "cost": 55.0
+      },
+      {
+        "date": "2026-01-23",
+        "cost": 55.0
+      },
+      {
+        "date": "2026-01-24",
+        "cost": 55.0
+      },
+      {
+        "date": "2026-01-25",
+        "cost": 55.0
+      },
+      {
+        "date": "2026-01-26",
+        "cost": 55.0
+      },
+      {
+        "date": "2026-01-27",
+        "cost": 55.0
+      },
+      {
+        "date": "2026-01-28",
+        "cost": 55.0
+      },
+      {
+        "date": "2026-01-29",
+        "cost": 55.0
+      },
+      {
+        "date": "2026-01-30",
+        "cost": 55.0
+      },
+      {
+        "date": "2026-01-31",
+        "cost": 55.0
+      }
+    ]
+  }
+}

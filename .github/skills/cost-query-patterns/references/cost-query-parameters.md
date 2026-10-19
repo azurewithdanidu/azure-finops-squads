@@ -21,6 +21,16 @@ so `SKILL.md` can stay focused on the method.
 subscriptions in one scope should be narrowed with the user first — the upstream Cost Management
 API throttles and bursty fan-out returns rate-limit errors.
 
+## Daily-grain recipe (spend timeline)
+
+`scope=/subscriptions/<id>`, `timeframe=Custom` with the aggregate call's `from`/`to`,
+`granularity=Daily`, `groupBy=ServiceName`, `metric` = the aggregate call's metric, `top=5000`.
+Roughly `days × services` rows come back (92 days × ~25 services ≈ 2,300), under the 5000 cap; if
+exactly 5000 come back, the result was truncated — record `daily.truncated: true`. Each row gives
+a cost, a day (an integer like `20261014` — convert to `YYYY-MM-DD`), the service and the
+currency. The full procedure (top 10 + `Other`, `dailyTotal`, `provisionalFrom`, reconciliation)
+is in the **Daily series** section of [SKILL.md](../SKILL.md). Offline-verified only.
+
 ## AKS cost (`arm.query_aks_costs`)
 
 Subscription scope only — no resource-group or billing scopes. Supports breakdowns by

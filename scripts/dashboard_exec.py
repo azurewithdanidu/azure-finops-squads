@@ -9,7 +9,9 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
+import charts
 import dashboard_insights as I
+import spend_daily as sd
 from dashboard_charts import hbar_chart
 from dashboard_helpers import is_approximate, md_escape
 from dashboard_ui import KPI_NOTE_LABELS, RunContext, card_grid, chart, empty_state
@@ -89,6 +91,31 @@ def _kpi_cards(ctx: RunContext) -> None:
     elif tc:
         tag["note"] = "Not available this run."
     card_grid([run_rate, opportunity, realised, tag], per_row=2)
+
+
+def _timeline(ctx: RunContext) -> None:
+    st.subheader("Spend over time")
+    daily = sd.get_daily(ctx.spend)
+    if daily is None:
+        empty_state(
+            "Daily data not captured — re-run Discovery",
+            "The spend timeline needs a daily cost series (spend.json `daily`). Ask the "
+            "Orchestrator to re-run Discovery; it makes one extra Daily-grain cost query.",
+            ":material/show_chart:",
+        )
+        return
+    shown = charts.select_exec_events(ctx.events.get("events", []))
+    with st.container(border=True):
+        st.caption(
+            f"Total cost per day ({daily.get('currency') or ctx.spend.get('currency') or ''}). "
+            "The last three days are still settling and may change."
+        )
+        chart(charts.total_area_chart(daily, shown, theme=ctx.mode))
+        for e in shown:
+            st.markdown("- " + md_escape(I.event_sentence(e)))
+        note = I.reconcile_message(sd.reconcile(ctx.spend), daily.get("currency"))
+        if note:
+            st.caption(md_escape(note[1]))
 
 
 def _cost_drivers(ctx: RunContext) -> None:
@@ -201,6 +228,7 @@ def _summary_report(ctx: RunContext) -> None:
 def render_executive(ctx: RunContext) -> None:
     _headline(ctx)
     _kpi_cards(ctx)
+    _timeline(ctx)
     _cost_drivers(ctx)
     _decisions(ctx)
     _progress(ctx)

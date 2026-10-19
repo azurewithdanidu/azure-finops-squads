@@ -28,6 +28,7 @@ for the full correction history). **Always attempt `arm.query_costs` first.** On
 | Artifact / field | Result |
 |---|---|
 | `spend.json` | Spend totals/breakdowns with recorded currency and window |
+| `spend.json` `daily` | Daily cost series (top 10 services + Other, `dailyTotal`), reconciled against the totals — see "Daily series" below |
 | `{"status": "unavailable", "reason": ...}` | Honest fallback when the call genuinely fails |
 | `estimatedMonthlySaving.basis` input | Currency/rate context passed to [price-basis-handling](../price-basis-handling/SKILL.md) |
 
@@ -44,6 +45,74 @@ for the full correction history). **Always attempt `arm.query_costs` first.** On
 4. Record the price `basis` (actual for EA/MCA/CSP/PAYG actuals; list-price if only retail is
    available) — see [price-basis-handling](../price-basis-handling/SKILL.md).
 
+## Daily series (required when spend is available)
+
+After the aggregate call(s) succeed, make **one more** `arm.query_costs` call to capture cost per
+day, so the dashboard can draw a spend timeline and detect events (a service that stopped
+billing, a step change, a spike). It reuses the aggregate call's window, metric and currency.
+
+**Offline-verified:** this procedure is written from the documented `query_costs` behaviour and
+checked against fixtures only. Daily grain for a single service (`filterDimension`/`filterValues`)
+was live-verified; the unfiltered `groupBy=ServiceName` Daily call has not yet been run against a
+real subscription.
+
+1. **Call** (same `scope`, `from`, `to` and `metric` as the aggregate call):
+
+   | Param | Value |
+   |---|---|
+   | `scope` | `/subscriptions/<id>` |
+   | `timeframe` | `Custom` with `from` / `to` identical to the aggregate call |
+   | `granularity` | `Daily` |
+   | `groupBy` | `ServiceName` |
+   | `metric` | the same metric as the aggregate call (e.g. `Cost`) |
+   | `top` | `5000` |
+
+2. **Normalise each returned row** to `{date, service, cost}`. The API reports the day as an
+   integer such as `20261014`; write it as `"2026-10-14"`. Keep the returned currency.
+3. **Truncation.** If the call returned exactly 5000 rows it hit the limit: set
+   `daily.truncated: true` and keep what you received. Never extrapolate missing rows.
+4. **Top 10 plus Other.** Rank services by their total over the window. Keep the top 10 as their
+   own `series` rows. Add every remaining service together, per day, as rows with
+   `"service": "Other"` (omit `Other` if there are no remaining services). Omit rows whose cost is
+   zero.
+5. **`dailyTotal`.** One entry `{date, cost}` for **every** date from `from` to `to` inclusive
+   (cost `0` for a day with no spend). For each date the `series` costs must add up to that day's
+   `dailyTotal`.
+6. **`provisionalFrom`** = `to` minus 2 days, i.e. the first of the last three days. Cost data for
+   those days is still settling (it can lag by up to ~3 days), so the dashboard draws them
+   lighter and event detection ignores them.
+7. **Reconcile** the sum of `dailyTotal` against the aggregate total (`totalLastMonth`). They must
+   agree within 1%. If they do not: confirm the window, metric and currency are identical in both
+   calls, re-query once, and if they still differ record the figures in `daily.reconciliation`
+   (`dailyTotalSum`, `aggregateTotal`, `deltaPct`). **Never scale, round or adjust numbers to
+   force a match.**
+8. **Write the block** into `spend.json` beside the aggregates (which keep `"granularity": "None"`):
+
+   ```json
+   "daily": {
+     "granularity": "Daily",
+     "groupBy": "ServiceName",
+     "metric": "Cost",
+     "currency": "USD",
+     "from": "2026-07-16",
+     "to": "2026-10-14",
+     "provisionalFrom": "2026-10-12",
+     "truncated": false,
+     "series": [
+       { "date": "2026-07-16", "service": "Azure Firewall", "cost": 15.82 },
+       { "date": "2026-07-16", "service": "Other", "cost": 21.4 }
+     ],
+     "dailyTotal": [ { "date": "2026-07-16", "cost": 98.37 } ]
+   }
+   ```
+
+   `daily.currency` must equal the aggregate `currency`. Never convert currency.
+9. **If the Daily call genuinely fails** (tool error, throttling after back-off), omit `daily` and
+   record the real error in `inventory.json` as
+   `"enrichmentSkipped": [{ "field": "daily", "reason": "<the error>" }]`. Do not fabricate a
+   series.
+10. **Validate** before hand-off: `python scripts/validate_discovery.py .finops/runs/<id>/ --strict`.
+
 ## If `cost.query_spend` is genuinely unavailable
 
 Only after actually attempting the call and having it fail (tool not present in this host, auth
@@ -57,7 +126,10 @@ and proceed with waste/utilization findings that don't require spend totals.
 
 ## Pitfalls
 
-- Cost data lags (often 8–24h for recent days; up to ~3 days to settle). State the window.
+- Cost data lags (often 8–24h for recent days; up to ~3 days to settle). State the window, and
+  mark the last three days as provisional (`daily.provisionalFrom`).
+- Daily rows hit the 5000-row cap on long windows with many services: record `truncated`,
+  never guess the missing rows.
 - Amortized vs actual cost differ for commitments — pick one `metric` and label it.
 - Tag-based cost needs tags to exist at spend time; retroactive tagging does not reallocate
   history — and tags cannot be used as a `groupBy` dimension in `query_costs` anyway.
