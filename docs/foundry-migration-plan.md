@@ -121,3 +121,5 @@ visualizer -> implementer -> orchestrator.
 - Cost Management API rate limits when several subscriptions run on a schedule.
 - Preview features (hosted agents, routines, managed harness) may change.
 - Dashboard and storage contain spend data: keep Entra auth, RBAC-only storage, no public access.
+
+> **Update:** the five agents were consolidated into a single hosted agent, `finops-squad` (all 23 skills, one tool set). Query tools save full results to blob (`save_as`) and return previews; older tool results are compacted; gpt-4.1 capacity raised to 1000. The dashboard chat now targets `finops-squad`. The old five agents remain in Foundry and can be deleted.

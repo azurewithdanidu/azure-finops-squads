@@ -53,29 +53,51 @@ def _request(method: str, url: str, **kw) -> dict:
     return r.json()
 
 
+PREVIEW_CHARS = 3000
+MAX_INLINE_CHARS = 12000
+
+
+def _deliver(data: dict, subscription_id: str, run_id: str, save_as: str) -> str:
+    """Keep big payloads out of the model context: save them to the run and return a small preview."""
+    text = json.dumps(data)
+    if save_as and run_id and not data.get("error") and re.fullmatch(_SUB, subscription_id):
+        try:
+            key = RunStore(_backend(), subscription_id, run_id).write_json(save_as, data)
+        except Exception as e:
+            return json.dumps({"error": True, "body": f"save failed: {str(e)[:500]}"})
+        return json.dumps({"saved": key, "chars": len(text), "preview": text[:PREVIEW_CHARS], "note": "full result saved; do not re-save it"})
+    if len(text) > MAX_INLINE_CHARS:
+        return text[:MAX_INLINE_CHARS] + "...[TRUNCATED: pass run_id and save_as to store the full result, or aggregate in the query]"
+    return text
+
+
 @tool
 def resource_graph_query(
     query: Annotated[str, "Azure Resource Graph KQL query"],
     subscription_ids: Annotated[list[str], "Subscription IDs to query"],
+    run_id: Annotated[str, "Run id; with save_as, the full result is saved to storage server-side"] = "",
+    save_as: Annotated[str, "Artifact path to save the full result to, e.g. inventory.json. Preferred for large results"] = "",
 ) -> str:
     """Run a read-only Azure Resource Graph query (inventory, orphans, tag coverage)."""
     if not subscription_ids or not all(re.fullmatch(_SUB, s) for s in subscription_ids):
         return json.dumps({"error": True, "body": "subscription_ids must be GUIDs"})
     url = f"{ARM}/providers/Microsoft.ResourceGraph/resources?api-version=2022-10-01"
     body = {"subscriptions": subscription_ids, "query": query, "options": {"resultFormat": "objectArray", "$top": 1000}}
-    return json.dumps(_request("POST", url, json=body))[:60000]
+    return _deliver(_request("POST", url, json=body), subscription_ids[0], run_id, save_as)
 
 
 @tool
 def cost_query(
     scope: Annotated[str, "/subscriptions/<id> or /subscriptions/<id>/resourceGroups/<rg>"],
     query_body: Annotated[str, "Cost Management query JSON (type, timeframe/timePeriod, dataset)"],
+    run_id: Annotated[str, "Run id; with save_as, the full result is saved to storage server-side"] = "",
+    save_as: Annotated[str, "Artifact path to save the full result to, e.g. spend.json. Preferred for large results"] = "",
 ) -> str:
     """Query actual cost via the Cost Management Query API. Needs Cost Management Reader."""
     if not _SCOPE_RE.match(scope):
         return json.dumps({"error": True, "body": "scope must be a subscription or resource group"})
     url = f"{ARM}{scope}/providers/Microsoft.CostManagement/query?api-version=2023-11-01"
-    return json.dumps(_request("POST", url, json=json.loads(query_body)))[:60000]
+    return _deliver(_request("POST", url, json=json.loads(query_body)), scope.split("/")[2], run_id, save_as)
 
 
 @tool
@@ -83,6 +105,8 @@ def arm_get(
     path: Annotated[str, "ARM path starting with /subscriptions/, e.g. /subscriptions/<id>/providers/Microsoft.Advisor/recommendations"],
     api_version: Annotated[str, "API version, e.g. 2023-01-01"],
     query: Annotated[str, "Extra query string without leading ?, optional"] = "",
+    run_id: Annotated[str, "Run id; with save_as, the full result is saved to storage server-side"] = "",
+    save_as: Annotated[str, "Artifact path to save the full result to, e.g. advisor.json. Preferred for large results"] = "",
 ) -> str:
     """Read-only ARM GET for Advisor, Monitor metrics, budgets and reservations."""
     if not path.startswith("/subscriptions/") or ".." in path:
@@ -91,7 +115,7 @@ def arm_get(
     if not any(a in low for a in _GET_ALLOWED):
         return json.dumps({"error": True, "body": f"path not in read-only allowlist: {_GET_ALLOWED}"})
     url = f"{ARM}{path}?api-version={api_version}" + (f"&{query}" if query else "")
-    return json.dumps(_request("GET", url))[:60000]
+    return _deliver(_request("GET", url), path.split("/")[2], run_id, save_as)
 
 
 @tool
@@ -100,7 +124,7 @@ def retail_price(
 ) -> str:
     """Query the public Azure Retail Prices API (list price)."""
     r = httpx.get("https://prices.azure.com/api/retail/prices", params={"$filter": odata_filter}, timeout=60)
-    return r.text[:30000]
+    return r.text[:12000]
 
 
 def _backend() -> BlobBackend:
@@ -136,7 +160,7 @@ def read_artifact(
     """Read a run artifact from storage."""
     store = RunStore(_backend(), subscription_id, run_id)
     try:
-        return store.read_text(path)[:60000]
+        return store.read_text(path)[:15000]
     except Exception as e:
         return json.dumps({"error": True, "body": str(e)[:500]})
 
@@ -187,9 +211,5 @@ def build_reports(
     return json.dumps({"saved": ["reports/savings-ledger.json", "reports/kpis.json"], "mixedCurrencies": led.get("mixedCurrencies")})
 
 
-DISCOVERY_TOOLS = [*READ_TOOLS, *COMMON_TOOLS]
-ORCHESTRATOR_TOOLS = [*COMMON_TOOLS]
-ANALYSER_TOOLS = [*READ_TOOLS, *COMMON_TOOLS]
-VISUALIZER_TOOLS = [*COMMON_TOOLS, build_reports]
-IMPLEMENTER_TOOLS = [*COMMON_TOOLS]
+FINOPS_TOOLS = [*READ_TOOLS, *COMMON_TOOLS, build_reports]
 

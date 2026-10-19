@@ -10,40 +10,13 @@ services:
         host: azure.ai.project
         deployments: []
         endpoint: https://danidu-agentic-migrations.services.ai.azure.com/api/projects/danidu-agentic-migrations
-    finops-discovery:
+    finops-squad:
         project: src/finops_agent
         host: azure.ai.agent
         language: python
         uses:
             - ai-project
         env:
-            AGENT_ROLE: discovery
-            AZURE_AI_MODEL_DEPLOYMENT_NAME: ${AZURE_AI_MODEL_DEPLOYMENT_NAME}
-            FINOPS_STORAGE_ACCOUNT_URL: ${FINOPS_STORAGE_ACCOUNT_URL}
-            FINOPS_STORAGE_CONTAINER: finops
-            SKILL_NAMES: resource-graph-kql,cost-query-patterns,advisor-cost-recommendations,price-basis-handling
-        codeConfiguration:
-            dependencyResolution: remote_build
-            entryPoint: main.py
-            runtime: python_3_13
-        container:
-            resources:
-                cpu: "0.5"
-                memory: 1Gi
-        description: FinOps Discovery - inventories subscriptions, spend and Advisor cost recommendations (read-only).
-        kind: hosted
-        name: finops-discovery
-        protocols:
-            - protocol: responses
-              version: 2.0.0
-    finops-analyser:
-        project: src/finops_agent
-        host: azure.ai.agent
-        language: python
-        uses:
-            - ai-project
-        env:
-            AGENT_ROLE: analyser
             AZURE_AI_MODEL_DEPLOYMENT_NAME: ${AZURE_AI_MODEL_DEPLOYMENT_NAME}
             FINOPS_STORAGE_ACCOUNT_URL: ${FINOPS_STORAGE_ACCOUNT_URL}
             FINOPS_STORAGE_CONTAINER: finops
@@ -53,86 +26,11 @@ services:
             runtime: python_3_13
         container:
             resources:
-                cpu: "0.5"
-                memory: 1Gi
-        description: FinOps Analyser - waste, rightsizing, tagging, commitment, anomaly and verify modes (read-only).
+                cpu: "1"
+                memory: 2Gi
+        description: FinOps Squad - single agent that discovers, analyses, reports and drafts remediation, read-only on Azure, with all FinOps skills.
         kind: hosted
-        name: finops-analyser
-        protocols:
-            - protocol: responses
-              version: 2.0.0
-    finops-visualizer:
-        project: src/finops_agent
-        host: azure.ai.agent
-        language: python
-        uses:
-            - ai-project
-        env:
-            AGENT_ROLE: visualizer
-            AZURE_AI_MODEL_DEPLOYMENT_NAME: ${AZURE_AI_MODEL_DEPLOYMENT_NAME}
-            FINOPS_STORAGE_ACCOUNT_URL: ${FINOPS_STORAGE_ACCOUNT_URL}
-            FINOPS_STORAGE_CONTAINER: finops
-        codeConfiguration:
-            dependencyResolution: remote_build
-            entryPoint: main.py
-            runtime: python_3_13
-        container:
-            resources:
-                cpu: "0.5"
-                memory: 1Gi
-        description: FinOps Visualizer - executive summary, engineer backlog, savings ledger and KPIs from run artifacts.
-        kind: hosted
-        name: finops-visualizer
-        protocols:
-            - protocol: responses
-              version: 2.0.0
-    finops-implementer:
-        project: src/finops_agent
-        host: azure.ai.agent
-        language: python
-        uses:
-            - ai-project
-        env:
-            AGENT_ROLE: implementer
-            AZURE_AI_MODEL_DEPLOYMENT_NAME: ${AZURE_AI_MODEL_DEPLOYMENT_NAME}
-            FINOPS_STORAGE_ACCOUNT_URL: ${FINOPS_STORAGE_ACCOUNT_URL}
-            FINOPS_STORAGE_CONTAINER: finops
-        codeConfiguration:
-            dependencyResolution: remote_build
-            entryPoint: main.py
-            runtime: python_3_13
-        container:
-            resources:
-                cpu: "0.5"
-                memory: 1Gi
-        description: FinOps Implementer - drafts Bicep changes and PR bodies for approved findings; refuses T3/untiered.
-        kind: hosted
-        name: finops-implementer
-        protocols:
-            - protocol: responses
-              version: 2.0.0
-    finops-orchestrator:
-        project: src/finops_agent
-        host: azure.ai.agent
-        language: python
-        uses:
-            - ai-project
-        env:
-            AGENT_ROLE: orchestrator
-            AZURE_AI_MODEL_DEPLOYMENT_NAME: ${AZURE_AI_MODEL_DEPLOYMENT_NAME}
-            FINOPS_STORAGE_ACCOUNT_URL: ${FINOPS_STORAGE_ACCOUNT_URL}
-            FINOPS_STORAGE_CONTAINER: finops
-        codeConfiguration:
-            dependencyResolution: remote_build
-            entryPoint: main.py
-            runtime: python_3_13
-        container:
-            resources:
-                cpu: "0.5"
-                memory: 1Gi
-        description: FinOps Orchestrator - runs the squad end to end, enforces the human approval gate before the Implementer.
-        kind: hosted
-        name: finops-orchestrator
+        name: finops-squad
         protocols:
             - protocol: responses
               version: 2.0.0
