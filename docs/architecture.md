@@ -93,14 +93,75 @@ synonyms to match the published taxonomy in
 
 ## Dashboard structure and personas
 
-`scripts/dashboard.py` is organized into three named tabs, mirroring the Microsoft FinOps Toolkit's
-own Power BI report structure rather than one long flat page: **📊 Cost Summary** (headline KPIs,
-spend, estimated-vs-realised), **🧹 Waste & Governance** (iteration progress, savings-by-type,
-tier/status funnels, the full findings table), and **📈 KPIs & Trends** (the named KPI set above,
-its trend across runs, and the cross-run comparison). A sidebar **persona toggle**
-(Engineering / Leadership) reflects the Framework's own guidance that different personas need
-different levels of detail — Leadership sees KPI cards and charts only; Engineering additionally
-sees the raw findings table and per-finding evidence.
+`scripts/dashboard.py` loads the selected run once into a `RunContext` (`scripts/dashboard_ui.py`)
+and hands it to one of two renderers, chosen by the persona control or `?view=executive|engineering`
+(with `&run=<run id>`; both are synced with `st.query_params`, and invalid values fall back to
+Engineering and the newest run). The Executive view reflects the FinOps Framework's Leadership
+persona; the Engineering view its practitioner persona.
+
+- **Executive** (`scripts/dashboard_exec.py`) is one page with no raw tables: the headline sentence,
+  four KPI cards, top 5 cost drivers, "decisions needed" cards, goal progress bars, a collapsed
+  reliability note and the run's `executive-summary.md`. It omits finding ids, tier codes, IaC
+  match, resource ids, status funnels, run-comparison tables and raw JSON.
+- **Engineering** (`scripts/dashboard_eng.py`) has four tabs: **Work queue** (action-bucket filter,
+  findings table, row-selection detail dialog with evidence, Azure Portal link and a rule-based
+  blocker/next step), **Spend** (by service and resource group, source caveats), **Governance**
+  (tag coverage per required tag, iteration goals, findings overview) and **History & data
+  quality** (KPI cards and notes, trend, run comparison, `run-status.md`, per-run artifact
+  checklist).
+
+Every finding sits in exactly one **action bucket**, assigned by `classify_finding` in
+`scripts/dashboard_helpers.py` (first match wins): status approved / pr-open / merged → *In flight*;
+status verified / rejected, or type `anomaly` → *Informational*; tier T3 or missing (the Implementer
+refuses these) → *Decision needed*; `iacMatch.status == found` → *Ready for PR*; anything else →
+*Blocked on IaC*. `TYPE_LABELS` gives each finding type a plain-English name.
+
+The numbers both views show come from the same pure helpers, so they cannot disagree:
+`dashboard_helpers.py` (buckets, labels, `md_escape`, `safe_url`, `run_fingerprint`) and
+`scripts/dashboard_insights.py` (`bucket_totals`, `build_headline`, `reliability_notes`,
+`goal_progress`, `blocker_and_next_step`, `tag_coverage_rows`, …). Savings are always grouped per
+currency and never added across currencies; estimated and realised stay separate. Presentation is
+split into `.streamlit/config.toml` (native light/dark theme, minimal toolbar; no custom CSS),
+`scripts/dashboard_theme.py` (design tokens, Altair theme), `scripts/dashboard_charts.py` (chart
+builders) and `scripts/charts.py` (the daily-spend timeline, below). The `st.cache_data` loaders are keyed on each artifact's mtime. Artifact text (resource
+names, summaries, tags, the Markdown reports) is untrusted: it is rendered through native
+components only, never raw HTML, and Markdown-escaped first.
+
+## Daily spend, events and Discovery completeness
+
+`spend.json` gains an optional `daily` block (schema: `schemas/spend.schema.json`; every field is
+optional, so run folders written before it still load). Discovery makes one extra
+`arm.query_costs` call at `granularity=Daily`, `groupBy=ServiceName` over the same window and
+metric as the aggregates, and stores `series` rows `{date, service, cost}` for the top 10 services
+plus an `Other` row, a `dailyTotal` for every day, `provisionalFrom` (the last three days, still
+settling), a `truncated` flag and the currency actually returned (never converted). The procedure
+is the "Daily series" section of the `cost-query-patterns` skill.
+
+- `scripts/spend_daily.py` — pure helpers shared by everything below: the usable `daily` block,
+  per-service and total series (zero-filled), the provisional cutoff and `reconcile()`, which
+  compares the daily sum with the period total (within 1%) and refuses to compare across
+  currencies or windows.
+- `scripts/validate_discovery.py` — validates `inventory.json`, `spend.json` and `advisor.json`:
+  **errors** for malformed data (bad types, a daily series that doesn't add up, more than ten named
+  services), **warnings** for a missing required enrichment (`daily`, `tagCoverage.fullyTaggedCount`,
+  `resourceGroupTags`). An enrichment may be skipped only with a reason in `inventory.json`
+  `enrichmentSkipped: [{field, reason}]`. Discovery runs it with `--strict` before hand-off; CI runs
+  it on a complete fixture.
+- `scripts/spend_events.py` — pure functions plus a CLI writing `reports/spend-events.json`. Per
+  material service, on settled days only: `stopped` (≥7 days of spend then ≥3 zero days), `started`,
+  `step-change` (7-day mean shifts ≥30% for ≥5 days) and `spike` (beyond 3 sigma of the trailing 14
+  days and above a minimum amount). It also accepts manual events (`.finops/events.json`) and the
+  iteration window boundaries. Each event is `{date, service, kind, before, after, currency,
+  source}`. The dashboard computes the same events in memory, so it never depends on a stale file.
+- `scripts/charts.py` — pure Altair builders (no Streamlit): stacked area, lines with a 7-day rolling
+  mean of the total, and a total-only area; provisional days dashed/lighter inside a "Still
+  settling" band; events as dashed rules with staggered labels, extras left in the tooltip.
+
+The Executive view shows the total with at most three events in plain English; the Engineering
+Spend tab adds the service multiselect, the stacked/lines toggle and an events table. Without a
+`daily` block both views show a clear empty state — nothing is fabricated. Everything in this
+section is **offline-verified** (fixtures and unit tests); the unfiltered Daily call has not yet been
+exercised on a real subscription.
 
 ## Honest numbers: currency safety
 

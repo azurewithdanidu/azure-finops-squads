@@ -1,0 +1,17 @@
+{
+  "capturedAt": "2026-02-02T00:00:00Z",
+  "subscriptionId": "00000000-0000-0000-0000-000000000001",
+  "totalResources": 10,
+  "tagCoverage": {
+    "total": 10,
+    "missingOwner": 3,
+    "missingEnvironment": 2,
+    "fullyTaggedCount": 6
+  },
+  "resourceGroupTags": {
+    "rg-app": {
+      "owner": "platform",
+      "environment": "prod"
+    }
+  }
+}

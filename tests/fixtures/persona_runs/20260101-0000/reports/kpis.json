@@ -1,0 +1,54 @@
+{
+  "generatedAt": "2026-10-18T12:07:28Z",
+  "runId": "20260101-0000",
+  "currency": "AUD",
+  "mixedCurrencies": false,
+  "requiredTags": [
+    "owner",
+    "environment",
+    "application"
+  ],
+  "kpis": {
+    "taggingCompliance": {
+      "value": 40.0,
+      "unit": "percent",
+      "target": 90,
+      "meetsTarget": false,
+      "method": "tagCoverageApproximate",
+      "note": "UPPER BOUND approximation from the single worst per-tag missing count (no fullyTaggedCount available) -- true compliance is likely lower. Re-run Discovery with the fully-tagged-resource-count query in resource-graph-kql's reference catalog for an exact figure."
+    },
+    "allocationCoverage": {
+      "value": null,
+      "unit": "percent",
+      "method": "unavailable",
+      "note": "inventory.json has no resourceGroupTags map for this run."
+    },
+    "estimatedSavingsOpportunity": {
+      "value": 35.5,
+      "unit": "currency",
+      "currency": "AUD",
+      "note": "Primary currency only."
+    },
+    "realisedSavingsRate": {
+      "value": 0.0,
+      "unit": "percent",
+      "currency": "AUD",
+      "note": "realisedMonthly / estimatedMonthly for the primary currency; 0 when nothing is estimated yet."
+    },
+    "anomalyCount": {
+      "value": 1,
+      "unit": "count",
+      "previousRunId": null,
+      "previousValue": null,
+      "delta": null,
+      "trend": "unavailable",
+      "note": "No earlier run found in the runs directory to trend against."
+    },
+    "unitEconomics": {
+      "value": null,
+      "unit": null,
+      "method": "unavailable",
+      "note": "Needs either Azure OpenAI usage metrics or a configured business denominator: no Azure OpenAI GeneratedTokens/ProcessedPromptTokens captured in inventory.usageMetrics; no unitEconomics.denominator configured in .finops/config.json."
+    }
+  }
+}

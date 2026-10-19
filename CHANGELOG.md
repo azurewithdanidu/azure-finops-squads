@@ -8,6 +8,30 @@ All notable changes to **finops-squad** are documented here. The format is based
 
 ### Changed
 
+- **Made the dashboard's two personas genuinely different (Executive vs Engineering), built from
+  the same data.** `scripts/dashboard.py` now loads a run into one `RunContext` and calls
+  `render_executive` (`scripts/dashboard_exec.py`) or `render_engineering`
+  (`scripts/dashboard_eng.py`). **Executive** is a single plain-English page — headline sentence,
+  four KPI cards, top 5 cost drivers, decisions needed, goal progress, a reliability note and the
+  executive summary with a download button — with no finding ids, tier codes, IaC details or
+  resource ids. **Engineering** has Work queue / Spend / Governance / History & data quality tabs,
+  an action-bucket filter and a finding detail view with the evidence's tool and query, an Azure
+  Portal link and a rule-based blocker and next step. The "Leadership" persona label is now
+  "Executive". The view and run are synced to `?view=executive|engineering&run=<run id>`. New
+  `classify_finding` action buckets and `TYPE_LABELS` in `scripts/dashboard_helpers.py`, and shared
+  pure logic in `scripts/dashboard_insights.py`, keep both views' numbers identical.
+- **Modernised the dashboard UI (presentation only — no data or calculations changed).** Custom
+  light/dark theme and minimal toolbar in `.streamlit/config.toml`; a single palette and Altair
+  theme in `scripts/dashboard_theme.py` with chart builders in `scripts/dashboard_charts.py`; a
+  compact header with currency/price-basis chips; the run selector and persona switch moved from
+  the sidebar to a top control row; Material icons on tabs; bordered KPI cards with run-history
+  sparklines; consistently labelled and sorted charts, a dashed 90% tagging target and
+  text-plus-colour risk tiers; a `column_config` findings table whose row selection opens a
+  structured detail dialog; mtime-keyed `st.cache_data` file loading; friendlier empty states. In
+  mixed-currency runs the "Estimated saving by type" chart now shows the primary currency only,
+  instead of summing across currencies. Minimum Streamlit raised from 1.40 to 1.50. New pure
+  helpers and an AppTest smoke test are covered in `tests/test_scripts.py`; the dashboard also
+  reads an optional `FINOPS_RUNS_DIR` environment variable.
 - **Restructured the agent roster from 10 agents to 5: Orchestrator, Discovery, Analyser,
   Implementer, Visualizer.** The five previous finding agents (Waste Hunter, Rightsizer, Tagger,
   Commitment Planner, Anomaly Detective) plus the Verifier were each thin wrappers around a single
@@ -20,6 +44,26 @@ All notable changes to **finops-squad** are documented here. The format is based
   named the old agents (`docs/architecture.md`, `docs/risk-tiers.md`, `docs/security-model.md`,
   `docs/getting-started.md`, `copilot-instructions.md`, `findings.instructions.md`,
   `bicep.instructions.md`, several skill descriptions, and the README pipeline diagram).
+
+### Added (daily spend timeline)
+
+- **Daily spend series, annotated timeline and a more complete Discovery.** `spend.json` gains an
+  optional `daily` block (top 10 services plus `Other`, `dailyTotal`, `provisionalFrom`,
+  `truncated`), described by the new `schemas/spend.schema.json` (all fields optional, so existing
+  run folders still load). New `scripts/validate_discovery.py` checks inventory/spend/advisor shape
+  (errors for malformed data, warnings for missing enrichments) and runs in CI on a complete
+  fixture. The Discovery agent and the `cost-query-patterns` skill now require one extra
+  Daily-grain `arm.query_costs` call reconciled against the totals, make
+  `tagCoverage.fullyTaggedCount` and `resourceGroupTags` required unless skipped with a reason in
+  `inventory.json` `enrichmentSkipped`, and validate before hand-off. New `scripts/spend_events.py`
+  detects stopped / started / step-change / spike events on settled days (plus manual events from
+  `.finops/events.json` and iteration boundaries) and writes `reports/spend-events.json`; new
+  `scripts/charts.py` draws the stacked-area and lines timelines with provisional days dashed and
+  event markers. The Executive view shows the total with up to three plain-English events; the
+  Engineering Spend tab adds a service multiselect, a stacked/lines toggle and an events table. A
+  missing daily series shows "Daily data not captured — re-run Discovery" and nothing is invented.
+  All of this is offline-verified (fixtures and unit tests); the unfiltered Daily
+  `arm.query_costs` call has not yet been run against a real subscription.
 
 ### Fixed
 

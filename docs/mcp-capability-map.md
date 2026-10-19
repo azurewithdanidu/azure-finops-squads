@@ -58,6 +58,12 @@ agent host's own built-in Azure integration, not from the npm server we installe
 - `query_costs` (filterDimension=ServiceName, filterValues=Azure Firewall, granularity=Daily):
   returned a daily cost trend (~$42/day on billed days) confirming the backend returns genuine
   time-series cost data, not placeholders.
+- **Daily grain, all services (offline-verified).** Discovery now also issues one unfiltered
+  `query_costs` call (`granularity=Daily`, `groupBy=ServiceName`, same window and metric as the
+  aggregates, `top=5000`) to build the dashboard's spend timeline. The single-service daily call
+  above was live-verified; this unfiltered form is written from the documented behaviour (about
+  2,300 rows for 92 days × ~25 services, under the 5000-row cap) and has not been run against a
+  real subscription yet.
 - `execute_query` (Resource Graph KQL) returned the same 4 real disks as the earlier Azure CLI
   `az graph` fallback — confirming `execute_query` is a correct, working replacement for the
   broken host tool.
@@ -96,7 +102,9 @@ managed identity supplies the token):
   `group_resource_list` / `compute` / `storage` / `subscription_list` for detail.
 - **Spend:** `arm.query_costs` — by service, resource group, resource, or meter; daily or monthly
   grain; `Cost`, `CostUSD`, or `AmortizedCost` metrics. Max 5 `groupBy` dimensions, no tag grouping,
-  ~92-day rolling lookback cap, max 5000 rows.
+  ~92-day rolling lookback cap, max 5000 rows. **Daily grain is in use:** Discovery's extra
+  Daily call feeds `spend.json` `daily` (see `cost-query-patterns`), and cost data for the last
+  ~3 days is treated as provisional.
 - **Waste detection:** `compute` (VM power state, disks) + `monitor` metrics, plus Resource Graph
   queries for orphans.
 - **Advisor/right-size:** `advisor` + `optimization`.
