@@ -37,6 +37,7 @@ flowchart LR
 ## Phases
 
 ### 0. Baseline
+
 - Install `azd` (required by the Foundry skill's dependency check).
 - Confirm access, network and RBAC on the project; deploy a model.
 - Re-verify `docs/mcp-capability-map.md` against the Foundry host: `arm.query_costs` is host-specific
@@ -45,10 +46,12 @@ flowchart LR
 - Decisions: framework (default Microsoft Agent Framework), orchestration (default A2A).
 
 ### 1. Skills
+
 - Register the 22 `.github/skills` as Foundry Skills and attach via toolbox.
 - `.github/skills` stays the source of truth; CI syncs to Foundry.
 
 ### 2. Storage account and state layer
+
 - Bicep (AVM): storage account, `finops` container, versioning, soft delete, no public blob access,
   lifecycle rule (Cool after N days), diagnostics.
 - Layout mirrors `.finops/`: `<subscriptionId>/runs/<yyyymmdd-hhmm>/{inventory,spend,advisor}.json`,
@@ -60,14 +63,17 @@ flowchart LR
 - Optional: one-off script to upload existing local `.finops/runs`.
 
 ### 3. Hosted agents (one at a time)
+
 Order: discovery -> analyser (waste, rightsizing, tagging, commitment, anomaly, verify) ->
 visualizer -> implementer -> orchestrator.
+
 - `azd ai agent init --deploy-mode code` per agent, `azure.yaml` per service.
 - Per-agent managed identity: Reader + Cost Management Reader + Monitoring Reader only;
   Storage Blob Data Contributor on the `finops` container. Implementer: GitHub connection, no Azure write.
 - Guardrail blocking mutating tools.
 
 ### 4. Orchestration (done)
+
 - Built: the orchestrator embeds the specialists in-process (`Agent.as_tool`) with their tools and skills. Agent-to-agent
   calls over the endpoint were tried and fail, because a callee only gets a trusted user ID from a signed-in user, not a
   managed identity. The standalone agents remain callable directly. Analyser modes run in parallel via parallel tool calls.
@@ -77,6 +83,7 @@ visualizer -> implementer -> orchestrator.
   approval button comes in phase 6.
 
 ### 5. Dashboard on App Service
+
 - Linux App Service (Python), `streamlit run`, WebSockets on.
 - Replace local-file reads in `scripts/dashboard.py` / `dashboard_helpers.py` with a read-only blob
   reader (`DefaultAzureCredential`; local falls back to developer sign-in). Subscription and run pickers
@@ -87,6 +94,7 @@ visualizer -> implementer -> orchestrator.
 - Bicep (AVM): plan, web app, identity, role assignments. GitHub Actions deploy workflow.
 
 ### 6. Chat window
+
 - `st.chat_input` / `st.chat_message`, streamed replies from the orchestrator's Foundry endpoint.
 - App managed identity has Azure AI User on the project; signed-in user's name (Easy Auth header) is
   logged per call.
@@ -96,6 +104,7 @@ visualizer -> implementer -> orchestrator.
 - Remediation requests still require the explicit confirmation button.
 
 ### 7. Scheduling
+
 - Foundry routines (`azd` routine CRUD) trigger the orchestrator, e.g. weekly discovery + analysis
   per subscription, and a verify run after merged PRs.
 - Scheduled runs are scan-only: they stop at `plan.md`; the Implementer is never auto-chained.
@@ -103,11 +112,13 @@ visualizer -> implementer -> orchestrator.
 - Alerts on failed runs (Azure Monitor).
 
 ### 8. Quality, CI/CD, observability
+
 - Eval datasets from `evals/` and the skills' worked examples; batch evals per agent.
 - CI/CD workflow for agent and skill deploys.
 - Tracing to App Insights; trace and troubleshoot flow documented.
 
 ## Open decisions
+
 | Decision | Default |
 |---|---|
 | Agent framework | Microsoft Agent Framework |
@@ -117,6 +128,7 @@ visualizer -> implementer -> orchestrator.
 | Schedule cadence | Weekly scan, monthly verify (confirm) |
 
 ## Risks
+
 - `arm` tool portability (see Phase 0).
 - Cost Management API rate limits when several subscriptions run on a schedule.
 - Preview features (hosted agents, routines, managed harness) may change.
