@@ -57,8 +57,14 @@ PREVIEW_CHARS = 3000
 MAX_INLINE_CHARS = 12000
 
 
+def _canon(path: str) -> str:
+    """Top-level artifacts use kebab-case so snake_case variants don't create duplicates (findings/ and reports/ untouched)."""
+    return path if "/" in path else path.replace("_", "-")
+
+
 def _deliver(data: dict, subscription_id: str, run_id: str, save_as: str) -> str:
     """Keep big payloads out of the model context: save them to the run and return a small preview."""
+    save_as = _canon(save_as)
     text = json.dumps(data)
     if save_as and run_id and not data.get("error") and re.fullmatch(_SUB, subscription_id):
         try:
@@ -69,6 +75,51 @@ def _deliver(data: dict, subscription_id: str, run_id: str, save_as: str) -> str
     if len(text) > MAX_INLINE_CHARS:
         return text[:MAX_INLINE_CHARS] + "...[TRUNCATED: pass run_id and save_as to store the full result, or aggregate in the query]"
     return text
+
+
+REPORT_CURRENCY = os.environ.get("REPORT_CURRENCY", "AUD").upper()
+
+
+def _fx_rate(src: str, dst: str) -> tuple[float, str] | None:
+    try:
+        r = httpx.get(f"https://api.frankfurter.dev/v1/latest?base={src}&symbols={dst}", timeout=20)
+        r.raise_for_status()
+        j = r.json()
+        return float(j["rates"][dst]), str(j.get("date", ""))
+    except Exception:
+        return None
+
+
+def _to_report_currency(data: dict) -> dict:
+    """Convert Cost Management cost columns from the billing currency to REPORT_CURRENCY, recording the rate used."""
+    props = data.get("properties") if isinstance(data, dict) else None
+    if not props or "columns" not in props or "rows" not in props:
+        return data
+    cols = [c.get("name") for c in props["columns"]]
+    if "Currency" not in cols:
+        return data
+    ci = cols.index("Currency")
+    cost_idx = [i for i, c in enumerate(cols) if c and "cost" in c.lower() and "usd" not in c.lower()]
+    rates: dict[str, tuple[float, str] | None] = {}
+    applied: dict[str, dict] = {}
+    for row in props["rows"]:
+        src = str(row[ci]).upper()
+        if src == REPORT_CURRENCY:
+            continue
+        if src not in rates:
+            rates[src] = _fx_rate(src, REPORT_CURRENCY)
+        if not rates[src]:
+            continue
+        rate, date = rates[src]
+        for i in cost_idx:
+            if isinstance(row[i], (int, float)):
+                row[i] = round(row[i] * rate, 4)
+        row[ci] = REPORT_CURRENCY
+        applied[src] = {"rate": rate, "rateDate": date}
+    if applied:
+        props["fxConversion"] = {"reportCurrency": REPORT_CURRENCY, "source": "frankfurter.dev (ECB reference rates)",
+                                 "from": applied, "note": "Converted from billing currency; an estimate, not the invoiced amount"}
+    return data
 
 
 @tool
@@ -101,7 +152,7 @@ def cost_query(
         body = json.loads(query_body) if isinstance(query_body, str) else query_body
     except ValueError as e:
         return json.dumps({"error": True, "body": f"query_body is not valid JSON: {e}"})
-    return _deliver(_request("POST", url, json=body), scope.split("/")[2], run_id, save_as)
+    return _deliver(_to_report_currency(_request("POST", url, json=body)), scope.split("/")[2], run_id, save_as)
 
 
 @tool
@@ -144,6 +195,7 @@ def save_artifact(
 ) -> str:
     """Write a run artifact to storage. Findings and verification files are schema-validated."""
     store = RunStore(_backend(), subscription_id, run_id)
+    path = _canon(path)
     try:
         if path.endswith(".json"):
             doc = json.loads(content) if isinstance(content, str) else content
