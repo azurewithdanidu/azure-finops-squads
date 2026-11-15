@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 
 REPO = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO / "scripts"))
+sys.path.insert(0, str(REPO / "plugins" / "finops-squad" / "skills" / "finops-squad" / "scripts"))
 
 import spend_daily as sd  # noqa: E402
 import spend_events as se  # noqa: E402

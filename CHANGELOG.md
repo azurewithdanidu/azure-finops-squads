@@ -1,10 +1,36 @@
-# Changelog
+---
+title: Changelog
+description: Notable changes to finops-squad.
+---
+
+## Changelog
 
 All notable changes to **finops-squad** are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+### Plugin packaging
+
+- Package five thin agents, 27 skills, shared offline scripts and schemas as `plugins/finops-squad`.
+- Add source plugin/MCP definitions and marketplace-generated Claude Code and Cursor definitions.
+- Replace workspace-only agents, skills and prompt entry points with portable skill workflows.
+- Add private consumer-workspace preflight, read-only installation tests, Vally routing/safety
+  evaluations and an isolated marketplace validation tool.
+- Keep marketplace registration and live Azure verification separate from source packaging.
+
+### Removed
+
+- Removed the interactive Streamlit dashboard, its UI dependencies and dashboard-only tests.
+  Markdown reports, the savings ledger, KPIs, daily spend analysis and offline finding comparison
+  remain available. Earlier dashboard notes below describe work superseded by this removal.
+
+### Safety and validation
+
+- Require full schema validation and reject empty validation targets; record merge timestamps
+  on merged findings and permit missing costs only for inconclusive verification.
+- Make the orchestrator the sole run-status writer and add an offline remediation policy check.
 
 ### Changed
 

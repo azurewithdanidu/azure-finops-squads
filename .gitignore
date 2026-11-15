@@ -30,3 +30,10 @@ Thumbs.db
 # Logs and scratch
 *.log
 tmp/
+.agentz-tooling/
+session-state/
+session files/
+
+.tests/
+.agentz
+tests

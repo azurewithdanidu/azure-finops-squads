@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 
 REPO = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO / "scripts"))
+sys.path.insert(0, str(REPO / "plugins" / "finops-squad" / "skills" / "finops-squad" / "scripts"))
 
 import spend_daily as sd  # noqa: E402
 import validate_discovery as vd  # noqa: E402
@@ -40,7 +40,7 @@ def test_complete_fixture_run_is_valid_with_no_warnings():
 
 def test_legacy_spend_files_stay_valid():
     # The oldest fixture shape (monthly rows, no status) and a real-shaped aggregate file.
-    legacy = _load(REPO / "fixtures" / "spend.json")
+    legacy = _load(REPO / "plugins" / "finops-squad" / "evals" / "fixtures" / "legacy" / "spend.json")
     errors, warnings = vd.validate_spend(legacy)
     assert errors == []
     assert any("daily spend series not captured" in w for w in warnings)

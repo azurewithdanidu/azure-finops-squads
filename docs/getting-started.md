@@ -1,122 +1,68 @@
-# Getting started
+---
+title: Getting started
+description: Load the FinOps plugin in an IaC workspace and run a read-only assessment.
+---
 
-finops-squad runs inside GitHub Copilot (agent mode) in VS Code. This guide gets you from zero to a
-first read-only audit.
+## Load the package
 
-## 1. Prerequisites
+Load [plugins/finops-squad](../plugins/finops-squad/README.md) with the client's local plugin
+support, not the repository root. Start a new chat after loading so the skills and agents are
+discovered. In Copilot CLI, use
+`copilot --plugin-dir "<absolute-package-directory>" --agent finops-squad:finops-orchestrator`.
 
-- **VS Code** with GitHub Copilot (agent mode).
-- **Node.js** (for the Azure MCP server via `npx`).
-- **Python 3.10+** (for `scripts/validate-findings.py` and `scripts/ledger.py`).
-- **Azure CLI** (`az`) and an Azure sign-in with at least **Reader**, **Cost Management Reader** and
-  **Monitoring Reader** on the target subscription(s).
+The generated manifests support the classic plugin layout. Live client compatibility and Azure
+tool availability must be checked in your client; they are not guaranteed by installation.
 
-Install the schema validator dependency:
+## Prepare the consumer workspace
 
-```bash
-pip install jsonschema
-```
+Use your own Bicep IaC Git repository. Keep configuration only in its `.finops/config.json`.
+With user permission, add `.finops/` to the consumer repository's ignore rules before creating
+private artifacts. Never put configuration into the installed plugin.
 
-## 2. Sign in to Azure
+Use the synthetic configuration template bundled with the `finops-squad` entry skill. Replace
+sample scope values locally, select the cost window and price basis, and set the IaC repository
+path. Install Python 3.10+ and `jsonschema` for the offline tools. The plugin also requires Git.
 
-```bash
-az login
-az account set --subscription "<your-subscription>"
-```
+The entry workflow runs a local preflight that checks configuration and ignore coverage. It
+does not validate Azure permissions. Use a dedicated audit identity with Reader, Cost Management
+Reader and Monitoring Reader access and confirm no effective writes, including inherited,
+group and activated eligible roles. See [security model](security-model.md).
 
-## 3. Configure MCP servers
+## Connect tools
 
-Copy the template and restart MCP servers (Command Palette → **MCP: List Servers** → Restart):
+The optional bundled `finops-azure` MCP server uses Microsoft Azure MCP. Node.js and npx are
+needed if this server is enabled. If the client already has equivalent Azure tools, disable
+duplicate server registration in the client.
 
-```bash
-cp .vscode/mcp.json.example .vscode/mcp.json
-```
+Discover inventory, spend, Advisor, metrics and pricing capabilities in the actual host.
+Host-specific `arm` tools are not guaranteed. Missing data must be reported honestly rather than
+turned into zero spend, zero resources or fabricated savings.
 
-`.vscode/mcp.json` is git-ignored. It contains:
+## Run and interact
 
-- **azure-mcp** — Microsoft's Azure MCP server (`npx -y @azure/mcp@latest server start`): resource
-  access, Monitor metrics, Advisor, optimization, pricing.
+Select `finops-orchestrator` or invoke the `finops-squad` skill:
 
-Cost querying, Resource Graph, and retail pricing (`arm.query_costs`, `arm.execute_query`,
-`arm.get_retail_prices`) are provided directly by this agent host (GitHub Copilot in VS Code) with
-**no extra `.vscode/mcp.json` entry needed** — live-verified against a real subscription. An
-earlier revision of this guide described a separate, unverified "ARM MCP (CostManagement)" HTTP
-server; that was never needed and has been removed. See
-[mcp-capability-map.md](./mcp-capability-map.md) for the full correction, and note its one caveat:
-this `arm` tool group's availability is host-dependent, not guaranteed on every MCP client.
+> Run a read-only FinOps audit using my local configuration. Present the ranked findings,
+> evidence and reports. Do not remediate or open PRs.
 
-Budgets, cost forecasting, and commitment/reservation listing are still unavailable from any
-backend found so far.
+The workflow writes run artifacts into the consumer's ignored `.finops/runs/` directory.
+Open its executive summary, backlog, ledger and KPIs directly in the editor.
 
-> A third-party community FinOps MCP server was intentionally **not** included — finops-squad uses
-> Microsoft servers and host tools only.
+Useful follow-up requests:
 
-## 4. Create your run config
+- Resume this run and explain its blockers.
+- Compare this run with the previous run.
+- Prepare a Bicep PR for the specific finding I approve.
+- Verify this merged finding after its settling period and refresh the reports.
 
-Copy the example to the git-ignored runtime folder:
+There is no automatic transition to a PR, no automatic merge and no deployment. T3 findings
+remain analysis-only; T2 needs separate confirmation and a draft PR.
 
-```bash
-mkdir -p .finops
-cp docs/config.example.json .finops/config.json
-```
+## Offline testing
 
-Edit `.finops/config.json` with your subscription(s), time window, price basis and IaC repo path.
-Never commit this file.
+Run the development repository's `python -m pytest tests -q` before any live assessment.
+Plugin Vally fixtures contain only synthetic evidence. They are not observations of your estate.
 
-## 5. Run a first audit (read-only)
-
-In Copilot agent mode, use the **run-audit** prompt (`.github/prompts/run-audit.prompt.md`) or ask
-the **finops-orchestrator** agent to run an audit. It will:
-
-1. Discover the estate → `inventory.json`, `spend.json`, `advisor.json`.
-2. Analyse (waste mode, plus other modes if enabled) → `findings/*.json`.
-3. Rank findings → `plan.md`.
-4. Visualize → `reports/`.
-
-Then validate:
-
-```bash
-python scripts/validate-findings.py .finops/runs/<id>/
-```
-
-## 6. Remediate (optional, with confirmation)
-
-Review `plan.md`, approve the findings you want, and let the **finops-implementer** open PRs. It
-refuses T3/untiered findings and anything without an IaC match, and opens T2 changes as draft PRs
-only after you confirm.
-
-## 7. Verify savings
-
-After PRs merge and a settling period (≥ 7 days, allowing ~3 days of cost-data lag), run the
-**verify-savings** prompt. The Analyser (in `verify` mode) records realised savings and the
-Visualizer refreshes the ledger.
-
-## 8. Make it recurring (optional)
-
-A single audit is a snapshot; running it on a schedule turns the dashboard's KPI trend and
-cross-run comparison panels into something genuinely useful. See
-[scheduling-recurring-runs.md](./scheduling-recurring-runs.md) for a cron/Task Scheduler recipe —
-it never shortens the confirmation gate before remediation, only how often the read-only
-assessment itself refreshes.
-
-## Troubleshooting
-
-- **No spend numbers / "spend data unavailable"** — Discovery attempts `arm.query_costs` first;
-  this status only appears if that call genuinely failed in your environment (check the recorded
-  `reason` in `spend.json`). Waste/utilization findings still work regardless.
-- **Validator warns "daily spend series not captured"** — the dashboard's spend timeline is
-  empty. Re-run Discovery so it makes the extra Daily-grain `arm.query_costs` call (see the
-  "Daily series" section of the `cost-query-patterns` skill); if the call really failed, Discovery
-  records the reason in `inventory.json` `enrichmentSkipped`.
-- **Validator warns about `fullyTaggedCount` or `resourceGroupTags`** — these enrichments are
-  required, otherwise tagging compliance is only an approximation and allocation coverage shows
-  "—". Re-run Discovery's tag-coverage and resource-group-tags queries
-  (`.github/skills/resource-graph-kql/references/kql-query-catalog.md`), or have it record why it
-  skipped them. Check any run folder with
-  `python scripts/validate_discovery.py .finops/runs/<id>/ --strict`.
-- **"Daily total differs from the period total"** — the daily and aggregate calls used different
-  windows, metrics or currencies, or cost data was still settling. Re-run Discovery; the series is
-  never adjusted to force a match.
-- **Validation fails** — run `pip install jsonschema`; the script falls back to minimal checks
-  without it.
-- **MCP server not listed** — ensure `.vscode/mcp.json` exists and restart MCP servers.
+Bundled scripts are resolved from the installed entry skill's directory and invoked with
+`python -B`, using absolute consumer run paths. Never assume the consumer has a root `scripts/`
+directory. A failed schema check blocks handoff; `jsonschema` is mandatory.

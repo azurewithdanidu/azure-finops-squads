@@ -9,5 +9,12 @@
     "MD060": false
   },
   "globs": ["**/*.md"],
-  "ignores": ["**/node_modules/**", ".alta/**"]
+  "ignores": [
+    "**/node_modules/**",
+    ".alta/**",
+    ".venv/**",
+    ".finops/**",
+    ".agentz-tooling/**",
+    "session-state/**"
+  ]
 }

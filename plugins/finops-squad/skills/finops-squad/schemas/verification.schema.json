@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/finops-squad/schemas/verification.schema.json",
+  "title": "FinOps Squad Verification",
+  "description": "Result of verifying a merged finding against later cost data.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "findingId",
+    "mergedAt",
+    "checkedAt",
+    "baselineMonthly",
+    "observedMonthly",
+    "realisedSaving",
+    "result"
+  ],
+  "allOf": [
+    {
+      "if": { "properties": { "result": { "const": "inconclusive" } }, "required": ["result"] },
+      "then": { "required": ["notes"] },
+      "else": {
+        "properties": {
+          "baselineMonthly": { "type": "number" },
+          "observedMonthly": { "type": "number" },
+          "realisedSaving": { "type": "number" }
+        }
+      }
+    }
+  ],
+  "properties": {
+    "findingId": {
+      "type": "string",
+      "pattern": "^[a-z]+-[0-9]{4}$"
+    },
+    "mergedAt": {
+      "anyOf": [
+        { "type": "string", "format": "date-time" },
+        { "type": "string", "format": "date" }
+      ]
+    },
+    "checkedAt": {
+      "type": "string",
+      "format": "date"
+    },
+    "baselineMonthly": {
+      "type": ["number", "null"],
+      "minimum": 0
+    },
+    "observedMonthly": {
+      "type": ["number", "null"],
+      "minimum": 0
+    },
+    "realisedSaving": {
+      "type": ["number", "null"]
+    },
+    "result": {
+      "type": "string",
+      "enum": ["confirmed", "partial", "not-observed", "inconclusive"],
+      "description": "'inconclusive' when cost data is too fresh to trust."
+    },
+    "notes": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

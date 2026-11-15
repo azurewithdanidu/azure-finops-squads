@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "finops-azure": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@azure/mcp@3.0.0", "server", "start"]
+    }
+  }
+}

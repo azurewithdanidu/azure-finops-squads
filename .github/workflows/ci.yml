@@ -21,11 +21,24 @@ jobs:
       - name: Install dev dependencies
         run: pip install -r requirements-dev.txt
       - name: Validate fixtures against schemas
-        run: python scripts/validate-findings.py fixtures/
+        run: python -B plugins/finops-squad/skills/finops-squad/scripts/validate-findings.py plugins/finops-squad/evals/fixtures/legacy/
       - name: Validate Discovery output shape (complete fixture, strict)
-        run: python scripts/validate_discovery.py tests/fixtures/discovery/complete --strict
+        run: python -B plugins/finops-squad/skills/finops-squad/scripts/validate_discovery.py tests/fixtures/discovery/complete --strict
       - name: Run unit tests
         run: python -m pytest tests/ -q
+      - uses: actions/checkout@v4
+        with:
+          repository: azurewithdanidu/agentz
+          ref: 56ec88a6633fab7a3776a41806b4addf80f9fe42
+          path: .agentz-tooling
+          persist-credentials: false
+      - name: Check generated plugin definitions and marketplace structure
+        run: python scripts/plugin_tools.py --agentz-root .agentz-tooling
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Lint plugin evaluations
+        run: npx -y @microsoft/vally-cli@0.20.0 lint plugins/finops-squad/skills --eval-spec plugins/finops-squad/evals/eval.yaml
 
   markdownlint:
     name: Markdown lint
@@ -38,6 +51,7 @@ jobs:
           globs: |
             **/*.md
             !**/node_modules/**
+            !.agentz-tooling/**
 
   linkcheck:
     name: Link check
@@ -51,4 +65,5 @@ jobs:
             --no-progress
             --config .lychee.toml
             "**/*.md"
+            --exclude-path .agentz-tooling
           fail: true

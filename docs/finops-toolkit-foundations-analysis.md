@@ -1,4 +1,12 @@
-# FinOps research: what FinOps actually is, and where finops-squad can grow
+---
+title: FinOps research
+description: Historical research on FinOps capabilities and opportunities for finops-squad.
+---
+
+## FinOps research: what FinOps actually is, and where finops-squad can grow
+
+> Historical research: dashboard-specific observations and proposals below predate removal of the
+> interactive dashboard and do not describe the current product.
 
 Research-only analysis (no code changes resulted from this document). Grounded in live research
 against primary sources — not assumed or inferred:
