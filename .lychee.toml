@@ -8,6 +8,8 @@ accept = [200, 206, 429]
 exclude = [
   "^https://mcp\\.management\\.azure\\.com",
   "^https://github\\.com/finops-squad",
+  # This public reference rejects automated CI requests with HTTP 403.
+  "^https://www\\.iso\\.org/iso-8601-date-and-time-format\\.html$",
 ]
 
 # Treat these as fine without a network round-trip.

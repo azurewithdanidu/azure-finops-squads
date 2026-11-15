@@ -1,0 +1,67 @@
+name: Release plugin
+
+on:
+  push:
+    tags:
+      - "v[0-9]*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  checks:
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    needs: checks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify release version
+        shell: python
+        run: |
+          import json
+          import os
+          import re
+          from pathlib import Path
+
+          plugin = Path("plugins/finops-squad")
+          version = json.loads((plugin / "plugin.json").read_text())["version"]
+          if not re.fullmatch(r"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)", version):
+              raise SystemExit("Release version must be a stable semantic version")
+          if os.environ["GITHUB_REF_NAME"] != f"v{version}":
+              raise SystemExit("Release tag must match the plugin manifest version")
+          for name in (".claude-plugin/plugin.json", ".cursor-plugin/plugin.json"):
+              if json.loads((plugin / name).read_text())["version"] != version:
+                  raise SystemExit(f"Generated manifest version mismatch: {name}")
+      - name: Archive the tracked plugin and checksum
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          archive="finops-squad-${GITHUB_REF_NAME}.zip"
+          git archive --format=zip --prefix=finops-squad/ \
+            --output="dist/${archive}" HEAD:plugins/finops-squad
+          (cd dist && sha256sum "${archive}" > "${archive}.sha256")
+      - name: Create draft GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release create "$GITHUB_REF_NAME" \
+            --repo "$GITHUB_REPOSITORY" --verify-tag --draft \
+            --title "finops-squad ${GITHUB_REF_NAME}" --generate-notes \
+            "dist/finops-squad-${GITHUB_REF_NAME}.zip" \
+            "dist/finops-squad-${GITHUB_REF_NAME}.zip.sha256"

@@ -93,6 +93,19 @@ docs/                   # source-repository contributor and release documentatio
 See [architecture](docs/architecture.md), [security model](docs/security-model.md),
 [skill authoring](docs/skill-authoring-guide.md) and the [migration plan](docs/plugin-migration-plan.md).
 
+## Create a release
+
+The [release workflow](.github/workflows/release.yml) runs when you push a version tag such as
+`v1.0.0`. It reruns the full CI workflow, checks the tag against the source and generated manifest
+versions, then creates a **draft GitHub release** with a plugin-only ZIP, SHA-256 checksum and
+generated release notes. The archive includes only committed files beneath the plugin directory,
+not local configuration, session files or the source repository's development tooling.
+
+Before tagging, update the source manifest and plugin README, regenerate client definitions,
+and commit the reviewed changes. Push the commit and matching tag when ready. Review the draft
+and complete outstanding behavioural/client validation before publishing it. A version number
+does not certify those checks. This workflow does not deploy Azure or register the plugin in agentz.
+
 ## License
 
 [MIT](LICENSE).

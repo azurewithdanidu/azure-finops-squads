@@ -11,6 +11,13 @@ All notable changes to **finops-squad** are documented here. The format is based
 
 ## [Unreleased]
 
+### Release preparation
+
+- Set the plugin version to 1.0.0 and regenerate client definitions.
+- Add version-tag-triggered draft GitHub releases with full CI checks, a plugin-only ZIP and checksum.
+- Exclude the exact ISO date/time reference from automated link checks because the site returns
+  HTTP 403 to CI; continue checking all other URLs.
+
 ### Plugin packaging
 
 - Package five thin agents, 27 skills, shared offline scripts and schemas as `plugins/finops-squad`.
