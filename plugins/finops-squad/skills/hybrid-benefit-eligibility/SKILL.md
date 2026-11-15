@@ -55,7 +55,7 @@ and write the finding with capped confidence.
 |---|---|
 | Azure Hybrid Benefit for Windows Server | <https://learn.microsoft.com/en-us/azure/virtual-machines/windows/hybrid-use-benefit-licensing> |
 | Azure Hybrid Benefit for SQL Server | <https://learn.microsoft.com/en-us/azure/azure-sql/azure-hybrid-benefit> |
-| Software Assurance eligibility | <https://learn.microsoft.com/en-us/licensing/docs/licensing/products/windows-server> |
+| Windows Server licensing resources | <https://www.microsoft.com/licensing/docs/view/Windows-Server> |
 
 ### Key takeaways
 

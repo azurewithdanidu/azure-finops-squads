@@ -1,6 +1,6 @@
 {
   "name": "finops-squad",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Read-only Azure FinOps assessments, evidence-backed findings, static reports and approval-gated Bicep remediation with later savings verification.",
   "author": {
     "name": "Azure with Danidu",

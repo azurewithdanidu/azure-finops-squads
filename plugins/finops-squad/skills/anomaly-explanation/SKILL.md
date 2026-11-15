@@ -66,7 +66,7 @@ cluster), set a real `estimatedMonthlySaving`; otherwise 0, labelled.
 |---|---|
 | Cost Management anomaly detection | <https://learn.microsoft.com/en-us/azure/cost-management-billing/understand/analyze-unexpected-charges> |
 | Activity log overview | <https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/activity-log> |
-| Cost Management data latency | <https://learn.microsoft.com/en-us/azure/cost-management-billing/automate/ratelimits-cost-management-api-data-latency> |
+| Cost Management data latency | <https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/understand-cost-mgt-data> |
 
 ### FinOps Foundation
 

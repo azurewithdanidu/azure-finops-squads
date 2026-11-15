@@ -82,7 +82,7 @@ for commitment coverage and vacancy rates."*
   type we don't produce.
 - **Opportunity**: add a 90%-coverage flag to the tagging finding/dashboard, and a new lightweight
   "allocation coverage" panel (% of spend with a complete tag set vs. not) — this is Resource Graph
-  + spend data we already pull, just not surfaced as its own metric.
+  - spend data we already pull, just not surfaced as its own metric.
 
 ### C. KPIs & Benchmarking — we have zero named KPIs, only ad-hoc numbers
 

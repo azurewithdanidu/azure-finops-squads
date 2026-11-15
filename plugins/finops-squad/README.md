@@ -11,7 +11,7 @@ Never deploy or mutate live Azure. There is no interactive dashboard.
 | Property | Value |
 |----------|-------|
 | Owner | Azure with Danidu, @azurewithdanidu |
-| Status | Beta, 0.1.0 |
+| Status | Beta, 0.1.1 |
 | Format | Classic plugin with generated Claude Code and Cursor manifests |
 | Clients | Copilot CLI clean-consumer loading and safety refusal tested; VS Code, Claude Code and Cursor runtime support unverified |
 

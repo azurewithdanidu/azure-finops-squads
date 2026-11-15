@@ -6,8 +6,9 @@ description: Approved migration plan and implementation status for the FinOps sq
 ## Status and scope
 
 Approved for implementation by the user's "Yes execute this" instruction. Source packaging is
-implemented; marketplace publication remains a separate approval. See the
-[readiness report](../.agentz/finops-squad/readiness-report.md) for observed validation and limits.
+implemented; marketplace publication remains a separate approval. Local intent, research and
+readiness notes are development artifacts, not distributed documentation. Behavioural evaluation
+in an isolated worker and a published linked-source installation remain release gates.
 
 The package has five thin agents, 27 skills and three schemas, including four new workflow skills.
 The migration preserves the approved dashboard removal and hardening work. The external agentz
@@ -152,8 +153,8 @@ not independent proof of human consent. A successful check does not authorise a 
 
 ### 1. Confirm intent and reuse decision
 
-- Approve the [intent brief](../.agentz/finops-squad/intent-brief.md), ownership and linked-source model.
-- Review the [provisional catalog assessment](../.agentz/finops-squad/research.md): no match
+- Approve the intent, ownership and linked-source model.
+- Review the initial catalog assessment: no workflow match
   scored at least 0.4; closest was the static Bicep review skill at 0.22.
 - Repeat component-level checks with the final skill descriptions and trigger phrases.
 - Compare any matches scoring at least 0.4 against the requested workflow.

@@ -145,7 +145,7 @@ and proceed with waste/utilization findings that don't require spend totals.
 | Cost Management Query REST API | <https://learn.microsoft.com/en-us/rest/api/cost-management/query/usage> |
 | Understand Cost Management data | <https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/understand-cost-mgt-data> |
 | Group and filter options | <https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/group-filter> |
-| Cost Management rate limits | <https://learn.microsoft.com/en-us/azure/cost-management-billing/automate/ratelimits-cost-management-api-data-latency> |
+| Cost Management errors and throttling | <https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/cost-management-error-codes> |
 | AKS cost analysis | <https://learn.microsoft.com/en-us/azure/aks/cost-analysis> |
 
 ### Key takeaways

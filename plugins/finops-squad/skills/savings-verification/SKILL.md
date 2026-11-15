@@ -70,7 +70,7 @@ If data is too fresh or lagging, return `result: "inconclusive"` — do not forc
 
 | Topic | Link |
 |---|---|
-| Cost Management data latency | <https://learn.microsoft.com/en-us/azure/cost-management-billing/automate/ratelimits-cost-management-api-data-latency> |
+| Cost Management data latency | <https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/understand-cost-mgt-data> |
 | Understand Cost Management data | <https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/understand-cost-mgt-data> |
 
 ### Key takeaways

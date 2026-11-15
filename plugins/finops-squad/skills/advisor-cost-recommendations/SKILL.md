@@ -57,7 +57,7 @@ alternatives). Advisor is a strong, free source of cost ideas — but validate b
 |---|---|
 | Azure Advisor cost recommendations | <https://learn.microsoft.com/en-us/azure/advisor/advisor-reference-cost-recommendations> |
 | Advisor REST API | <https://learn.microsoft.com/en-us/rest/api/advisor/recommendations> |
-| Cost optimization recommendations (Optimize tool) | <https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/cost-optimization-recommendations> |
+| Reduce costs with recommendations | <https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/tutorial-acm-opt-recommendations> |
 
 ### Key takeaways
 
